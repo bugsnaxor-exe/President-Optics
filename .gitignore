@@ -1,0 +1,15 @@
+node_modules
+node_modules/
+node_modules/
+# Firebase build outputs and dependencies
+node_modules/
+.firebase/
+functions/node_modules/
+*.log
+.DS_Store
+.env
+
+# Optional: ignore big binary files
+*.node
+
+.vercel

@@ -1,0 +1,487 @@
+@tailwind base;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Inter', sans-serif;
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 5.9% 10%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+    --radius: 0.5rem;
+  }
+
+
+  .cyberpunk {
+    --background: 240 100% 5%;
+    --foreground: 0 0% 95%;
+    --card: 240 50% 10%;
+    --card-foreground: 0 0% 95%;
+    --popover: 240 50% 10%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 280 100% 70%;
+    --primary-foreground: 240 100% 5%;
+    --secondary: 180 100% 50%;
+    --secondary-foreground: 240 100% 5%;
+    --muted: 240 20% 15%;
+    --muted-foreground: 0 0% 70%;
+    --accent: 120 100% 50%;
+    --accent-foreground: 240 100% 5%;
+    --destructive: 0 100% 60%;
+    --destructive-foreground: 0 0% 95%;
+    --border: 280 50% 30%;
+    --input: 240 20% 15%;
+    --ring: 280 100% 70%;
+    --chart-1: 280 100% 70%;
+    --chart-2: 180 100% 50%;
+    --chart-3: 120 100% 50%;
+    --chart-4: 60 100% 50%;
+    --chart-5: 0 100% 60%;
+  }
+
+  .ocean {
+    --background: 200 40% 8%;
+    --foreground: 180 20% 95%;
+    --card: 200 30% 12%;
+    --card-foreground: 180 20% 95%;
+    --popover: 200 30% 12%;
+    --popover-foreground: 180 20% 95%;
+    --primary: 200 100% 50%;
+    --primary-foreground: 200 40% 8%;
+    --secondary: 180 60% 40%;
+    --secondary-foreground: 180 20% 95%;
+    --muted: 200 20% 18%;
+    --muted-foreground: 180 15% 70%;
+    --accent: 160 80% 45%;
+    --accent-foreground: 200 40% 8%;
+    --destructive: 0 80% 55%;
+    --destructive-foreground: 180 20% 95%;
+    --border: 200 40% 25%;
+    --input: 200 20% 18%;
+    --ring: 200 100% 50%;
+    --chart-1: 200 100% 50%;
+    --chart-2: 180 60% 40%;
+    --chart-3: 160 80% 45%;
+    --chart-4: 220 60% 50%;
+    --chart-5: 240 60% 50%;
+  }
+
+  .sunset {
+    --background: 20 60% 8%;
+    --foreground: 45 30% 95%;
+    --card: 25 40% 12%;
+    --card-foreground: 45 30% 95%;
+    --popover: 25 40% 12%;
+    --popover-foreground: 45 30% 95%;
+    --primary: 25 100% 60%;
+    --primary-foreground: 20 60% 8%;
+    --secondary: 45 100% 60%;
+    --secondary-foreground: 20 60% 8%;
+    --muted: 25 25% 18%;
+    --muted-foreground: 45 20% 75%;
+    --accent: 340 80% 60%;
+    --accent-foreground: 20 60% 8%;
+    --destructive: 0 80% 55%;
+    --destructive-foreground: 45 30% 95%;
+    --border: 25 50% 30%;
+    --input: 25 25% 18%;
+    --ring: 25 100% 60%;
+    --chart-1: 25 100% 60%;
+    --chart-2: 45 100% 60%;
+    --chart-3: 340 80% 60%;
+    --chart-4: 15 80% 55%;
+    --chart-5: 35 80% 55%;
+  }
+
+  .forest {
+    --background: 120 40% 6%;
+    --foreground: 80 20% 95%;
+    --card: 120 30% 10%;
+    --card-foreground: 80 20% 95%;
+    --popover: 120 30% 10%;
+    --popover-foreground: 80 20% 95%;
+    --primary: 120 70% 40%;
+    --primary-foreground: 120 40% 6%;
+    --secondary: 80 60% 45%;
+    --secondary-foreground: 120 40% 6%;
+    --muted: 120 20% 15%;
+    --muted-foreground: 80 15% 70%;
+    --accent: 160 60% 40%;
+    --accent-foreground: 120 40% 6%;
+    --destructive: 0 80% 55%;
+    --destructive-foreground: 80 20% 95%;
+    --border: 120 40% 25%;
+    --input: 120 20% 15%;
+    --ring: 120 70% 40%;
+    --chart-1: 120 70% 40%;
+    --chart-2: 80 60% 45%;
+    --chart-3: 160 60% 40%;
+    --chart-4: 100 50% 45%;
+    --chart-5: 140 50% 45%;
+  }
+
+  .ocean-green {
+    --background: 0 0% 100%;
+    --foreground: 160 84% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 160 84% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 160 84% 15%;
+    --primary: 160 84% 39%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 160 84% 25%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 120 60% 95%;
+    --muted-foreground: 160 84% 25%;
+    --accent: 180 84% 55%;
+    --accent-foreground: 160 84% 15%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 120 60% 90%;
+    --input: 120 60% 95%;
+    --ring: 160 84% 39%;
+    --chart-1: 160 84% 39%;
+    --chart-2: 160 84% 25%;
+    --chart-3: 180 84% 55%;
+    --chart-4: 140 84% 45%;
+    --chart-5: 200 84% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  /* Mobile touch targets */
+  button, [role="button"], input, select, textarea {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Better mobile scrolling */
+  html {
+    scroll-behavior: smooth;
+    scrollbar-width: thin; /* Thin scrollbar for Firefox */
+    scrollbar-color: transparent transparent; /* Make it transparent */
+  }
+
+  /* Hide scrollbar for webkit browsers but keep it functional */
+  ::-webkit-scrollbar {
+    opacity: 0;
+  }
+
+  /* Hide scrollbar for Radix UI ScrollArea but keep functional */
+  [data-radix-scroll-area-viewport]::-webkit-scrollbar {
+    opacity: 0;
+  }
+
+  [data-radix-scroll-area-viewport] {
+    scrollbar-width: none;
+    overscroll-behavior: contain;
+    overflow: auto !important;
+  }
+
+  /* Prevent scrolling on invoice form container */
+  .grid.gap-6.px-0 {
+    overflow: hidden;
+  }
+
+  /* Mobile viewport height fix */
+  .min-h-screen {
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+}
+
+body {
+  position: relative;
+  background-attachment: fixed;
+  overscroll-behavior: none;
+}
+
+
+
+body.cyberpunk {
+  @apply bg-background text-foreground;
+  background-color: #0a0a0f;
+  background-image:
+    radial-gradient(circle at 20% 80%, rgba(139, 69, 255, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(0, 255, 255, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(0, 255, 0, 0.2) 0%, transparent 50%),
+    linear-gradient(135deg, #0a0a0f 0%, #1a0a2e 50%, #0a1a0f 100%);
+}
+
+body.ocean {
+  @apply bg-background text-foreground;
+  background-color: #0a1419;
+  background-image:
+    radial-gradient(circle at 30% 70%, rgba(0, 191, 255, 0.2) 0%, transparent 50%),
+    radial-gradient(circle at 70% 30%, rgba(0, 128, 128, 0.2) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(0, 206, 209, 0.15) 0%, transparent 50%),
+    linear-gradient(135deg, #0a1419 0%, #0f1a1f 50%, #0a1a1f 100%);
+}
+
+body.sunset {
+  @apply bg-background text-foreground;
+  background-color: #1a0f0a;
+  background-image:
+    radial-gradient(circle at 25% 75%, rgba(255, 140, 0, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 75% 25%, rgba(255, 215, 0, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(255, 20, 147, 0.2) 0%, transparent 50%),
+    linear-gradient(135deg, #1a0f0a 0%, #2a1810 50%, #1a1810 100%);
+}
+
+body.forest {
+  @apply bg-background text-foreground;
+  background-color: #0a1a0f;
+  background-image:
+    radial-gradient(circle at 30% 70%, rgba(34, 139, 34, 0.25) 0%, transparent 50%),
+    radial-gradient(circle at 70% 30%, rgba(107, 142, 35, 0.25) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(0, 128, 0, 0.2) 0%, transparent 50%),
+    linear-gradient(135deg, #0a1a0f 0%, #0f1f12 50%, #0a1f12 100%);
+}
+
+body.ocean-green {
+  @apply bg-background text-foreground;
+  background-color: #ffffff;
+  background-image:
+    radial-gradient(circle at 25% 75%, rgba(16, 185, 129, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 75% 25%, rgba(52, 211, 153, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.08) 0%, transparent 50%),
+    linear-gradient(135deg, #ffffff 0%, #f0fdf4 50%, #ecfdf5 100%);
+}
+
+
+body::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyBAMAAADsEZWCAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAABtQTFRF////AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAz1wDDAAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB+EIEwcIEDGgM+gAAAAdaVRYdENyZWF0aW9uIFRpbWUAMjAxNzowODoxOSAxNDoyNDowOUhGgwAAAFlJREFUeNpjYBgFo4A8MLyLyBZYbEk2LILT7cskZtgiKy6xCIIoi4gks8cl8R+GAAuLiCPDleG6wlwuPhjAwnA3Qy4Xnxw3DAnD9QXx+4C4cW44bhx3jhi4yAIA7fEzU+SFXW8AAAAASUVORK5CYII=');
+  background-repeat: repeat;
+  opacity: 0.15;
+  pointer-events: none;
+  z-index: -1;
+}
+
+body.mint::after,
+body.ocean-green::after {
+  opacity: 0;
+}
+
+
+.bg-card,
+aside,
+[data-sidebar="sidebar"],
+.bg-popover,
+[data-radix-popper-content-wrapper] {
+  background-color: transparent !important;
+  --tw-shadow: 0 0 #0000;
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+  -webkit-box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
+header {
+  background-color: transparent !important;
+  border-bottom: 1px solid hsl(var(--border) / 0.5);
+}
+
+aside {
+  border-right: 1px solid hsl(var(--border) / 0.5) !important;
+}
+
+aside .border-b {
+  border-bottom: 1px solid hsl(var(--border) / 0.5) !important;
+}
+
+[data-radix-collection-item]>button {
+  background-color: transparent !important;
+}
+
+/* Styles for PDF Generation (black and white) */
+.print-styles,
+.print-styles div,
+.print-styles header,
+.print-styles p,
+.print-styles span,
+.print-styles h1,
+.print-styles h2,
+.print-styles h3,
+.print-styles h4,
+.print-styles h5,
+.print-styles h6,
+.print-styles td,
+.print-styles th,
+.print-styles label {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.print-styles .text-primary {
+  color: #ffffff !important;
+}
+
+.print-styles .text-muted-foreground {
+  color: hsl(0, 0, 100%);
+}
+
+.print-styles .text-green-400 {
+  color: #ffffff !important;
+}
+
+.print-styles #advance-paid-container>input {
+  display: none;
+}
+
+.print-styles #advance-paid-container::after {
+  content: attr(data-value);
+  display: block;
+  text-align: right;
+  padding: 0 0.75rem;
+  /* mimic input padding */
+}
+
+.print-styles input {
+  border: none !important;
+  padding: 0 !important;
+  background-color: transparent !important;
+  color: #000 !important;
+}
+
+
+@media print {
+  body {
+    background: #fff;
+    font-size: 10px;
+    /* Smaller font for thermal printers */
+  }
+
+  /* Hide elements that shouldn't be printed */
+  aside,
+  header,
+  .print-hidden {
+    display: none !important;
+  }
+
+  /* Reset layout for printing */
+  .sm\:pl-60,
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .flex.flex-col.items-center.py-8.bg-muted\/40 {
+    padding: 0 !important;
+    background: #fff !important;
+  }
+
+  /* Style the invoice card for printing */
+  #invoice {
+    width: 80mm;
+    /* Standard thermal printer width */
+    max-width: 80mm;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 2mm;
+    font-family: 'Courier New', Courier, monospace;
+    /* Use a monospace font */
+  }
+
+  /* Adjust font sizes and spacing for receipt */
+  #invoice .text-3xl {
+    font-size: 16px;
+  }
+
+  #invoice .text-lg {
+    font-size: 12px;
+  }
+
+  #invoice .text-sm {
+    font-size: 10px;
+  }
+
+  #invoice .text-xs {
+    font-size: 8px;
+  }
+
+  #invoice .p-8 {
+    padding: 5px !important;
+  }
+
+  #invoice .my-6 {
+    margin-top: 10px !important;
+    margin-bottom: 10px !important;
+  }
+
+  #invoice .grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  #invoice .gap-4 {
+    gap: 8px;
+  }
+
+  /* Hide input borders and buttons */
+  .print\:border-none {
+    border: none !important;
+  }
+
+  .print\:px-0 {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  button.print\:hidden {
+    display: none !important;
+  }
+
+  #advance-paid-container>input {
+    display: none;
+  }
+
+  #advance-paid-container::after {
+    content: attr(data-value);
+    display: block;
+    text-align: right;
+  }
+
+  /* Ensure table fits */
+  table {
+    width: 100%;
+  }
+
+  th,
+  td {
+    padding: 2px !important;
+  }
+}
