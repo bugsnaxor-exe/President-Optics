@@ -13,10 +13,10 @@ import { Label } from './ui/label';
 
 const priceRanges = [
     { label: 'All Prices', value: 'all', min: 0, max: Infinity },
-    { label: '$0 - $50', value: '0-50', min: 0, max: 50 },
-    { label: '$50 - $100', value: '50-100', min: 50, max: 100 },
-    { label: '$100 - $200', value: '100-200', min: 100, max: 200 },
-    { label: '$200+', value: '200-plus', min: 200, max: Infinity },
+    { label: '₹0 - ₹50', value: '0-50', min: 0, max: 50 },
+    { label: '₹50 - ₹100', value: '50-100', min: 50, max: 100 },
+    { label: '₹100 - ₹200', value: '100-200', min: 100, max: 200 },
+    { label: '₹200+', value: '200-plus', min: 200, max: Infinity },
 ];
 
 export default function BestSellerByPriceRange() {

@@ -13,7 +13,6 @@ import {
 import Logo from '@/components/logo';
 import { ScrollArea } from './ui/scroll-area';
 import { getCookie } from '@/lib/cookies';
-import { CurrencySwitcher } from './currency-switcher';
 import { ThemeSwitcher } from './theme-switcher';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { MusicPlayer } from './music-player';
@@ -25,16 +24,10 @@ export function AppLayout({ children }) {
     const location = useLocation();
     const navigate = useNavigate();
     const pathname = location.pathname;
-    const [userRole, setUserRole] = React.useState();
     const { t } = useLanguage();
-
-    React.useEffect(() => {
-        setUserRole(getCookie('userRole'));
-    }, [pathname]);
 
     const handleLogout = () => {
         document.cookie = "currentUser=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-        document.cookie = "userRole=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         document.cookie = "patientId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         navigate('/');
     };
@@ -45,7 +38,7 @@ export function AppLayout({ children }) {
 
     return (
         <div className="flex min-h-screen w-full flex-col">
-            <header className="fixed top-0 flex h-16 w-full items-center gap-2 border-b bg-background/10 px-3 backdrop-blur-xl md:px-6 md:gap-4 z-50">
+            <header className="fixed top-0 flex h-16 w-full items-center gap-1 border-b bg-background/10 px-2 backdrop-blur-xl sm:px-3 sm:gap-2 md:px-6 md:gap-4 z-50">
                 <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
                     <Logo />
                 </nav>
@@ -76,22 +69,19 @@ export function AppLayout({ children }) {
                 <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
                     <div className="ml-auto flex items-center gap-2">
                         <LanguageSwitcher />
-                        {userRole !== 'doctor' && userRole !== 'patient' && <CurrencySwitcher />}
                         <ThemeSwitcher />
-                        {userRole === 'admin' && (
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button variant="ghost" size="icon">
-                                        <Music className="h-[1.2rem] w-[1.2rem]" />
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-96 max-h-96 overflow-y-auto overflow-x-hidden" align="end">
-                                    <ErrorBoundary fallback={<div className="p-4 text-center text-sm text-muted-foreground">Music player error</div>}>
-                                        <MusicPlayer />
-                                    </ErrorBoundary>
-                                </PopoverContent>
-                            </Popover>
-                        )}
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                    <Music className="h-[1.2rem] w-[1.2rem]" />
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-96 max-h-96 overflow-y-auto overflow-x-hidden" align="end">
+                                <ErrorBoundary fallback={<div className="p-4 text-center text-sm text-muted-foreground">Music player error</div>}>
+                                    <MusicPlayer />
+                                </ErrorBoundary>
+                            </PopoverContent>
+                        </Popover>
                     </div>
                     <Button variant="ghost" className="hidden md:flex" onClick={handleLogout}>
                         <LogOut className="mr-2 h-5 w-5" />

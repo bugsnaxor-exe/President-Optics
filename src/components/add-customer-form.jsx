@@ -62,37 +62,37 @@ export function AddCustomerForm({ onAddCustomer }) {
           )}
         />
 
-        <div className="grid grid-cols-2 gap-4">
-          <FormField control={form.control} name="email" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email (Optional)</FormLabel>
-              <FormControl><Input placeholder="john.doe@example.com" {...field} /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
-          <FormField control={form.control} name="phone" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Phone Number</FormLabel>
-              <FormControl><Input placeholder="555-123-4567" {...field} /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
-        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+           <FormField control={form.control} name="email" render={({ field }) => (
+             <FormItem>
+               <FormLabel>Email (Optional)</FormLabel>
+               <FormControl><Input placeholder="john.doe@example.com" {...field} /></FormControl>
+               <FormMessage />
+             </FormItem>
+           )} />
+           <FormField control={form.control} name="phone" render={({ field }) => (
+             <FormItem>
+               <FormLabel>Phone Number</FormLabel>
+               <FormControl><Input placeholder="555-123-4567" {...field} /></FormControl>
+               <FormMessage />
+             </FormItem>
+           )} />
+         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <FormField control={form.control} name="address.city" render={({ field }) => (
-            <FormItem>
-              <FormLabel>City (Optional)</FormLabel>
-              <FormControl><Input placeholder="e.g., New York" {...field} /></FormControl>
-            </FormItem>
-          )} />
-          <FormField control={form.control} name="address.state" render={({ field }) => (
-            <FormItem>
-              <FormLabel>State (Optional)</FormLabel>
-              <FormControl><Input placeholder="e.g., NY" {...field} /></FormControl>
-            </FormItem>
-          )} />
-        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+           <FormField control={form.control} name="address.city" render={({ field }) => (
+             <FormItem>
+               <FormLabel>City (Optional)</FormLabel>
+               <FormControl><Input placeholder="e.g., New York" {...field} /></FormControl>
+             </FormItem>
+           )} />
+           <FormField control={form.control} name="address.state" render={({ field }) => (
+             <FormItem>
+               <FormLabel>State (Optional)</FormLabel>
+               <FormControl><Input placeholder="e.g., NY" {...field} /></FormControl>
+             </FormItem>
+           )} />
+         </div>
 
         <div className="flex justify-end pt-4">
           <Button type="submit"><PlusCircle className="mr-2 h-4 w-4" /> Add Customer</Button>

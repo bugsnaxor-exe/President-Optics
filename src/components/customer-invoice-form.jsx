@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Separator } from './ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { PlusCircle, MinusCircle, Receipt } from 'lucide-react';
-import { createCustomerWithInvoice, getProducts } from '@/lib/api';
+import { createCustomerWithInvoice, getProducts, updateInvoice } from '@/lib/api';
 
 const customerInvoiceSchema = z.object({
   // Customer Information
@@ -23,6 +23,26 @@ const customerInvoiceSchema = z.object({
       state: z.string().optional(),
     }).optional(),
   }),
+
+  // Prescription Information
+  prescription: z.object({
+    rightEye: z.object({
+      sph: z.coerce.number().optional(),
+      cyl: z.coerce.number().optional(),
+      axis: z.coerce.number().optional(),
+      add: z.coerce.number().optional(),
+      pd: z.coerce.number().optional(),
+      bc: z.coerce.number().optional(),
+    }),
+    leftEye: z.object({
+      sph: z.coerce.number().optional(),
+      cyl: z.coerce.number().optional(),
+      axis: z.coerce.number().optional(),
+      add: z.coerce.number().optional(),
+      pd: z.coerce.number().optional(),
+      bc: z.coerce.number().optional(),
+    }),
+  }).optional(),
 
   // Invoice Information
   paymentMethod: z.enum(['cash', 'card', 'upi', 'bank_transfer']).default('cash'),
@@ -38,7 +58,7 @@ const customerInvoiceSchema = z.object({
   })).min(1, 'At least one item is required'),
 });
 
-export function CustomerInvoiceForm({ onInvoiceCreated }) {
+export function CustomerInvoiceForm({ onInvoiceCreated, onInvoiceUpdated, initialData }) {
   const { toast } = useToast();
   const [products, setProducts] = React.useState([]);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -51,6 +71,10 @@ export function CustomerInvoiceForm({ onInvoiceCreated }) {
         email: '',
         phone: '',
         address: { city: '', state: '' },
+      },
+      prescription: {
+        rightEye: { sph: '', cyl: '', axis: '', add: '', pd: '', bc: '' },
+        leftEye: { sph: '', cyl: '', axis: '', add: '', pd: '', bc: '' },
       },
       paymentMethod: 'cash',
       staffId: 1,
@@ -81,6 +105,19 @@ export function CustomerInvoiceForm({ onInvoiceCreated }) {
     fetchProducts();
   }, []);
 
+  React.useEffect(() => {
+    if (initialData) {
+      form.reset({
+        customer: initialData.customer || { name: '', email: '', phone: '', address: { city: '', state: '' } },
+        prescription: initialData.prescription || { rightEye: {}, leftEye: {} },
+        paymentMethod: initialData.paymentMethod || 'cash',
+        staffId: initialData.staffId || 1,
+        discount: initialData.discount || 0,
+        items: initialData.items || [{ productId: '', productName: '', quantity: 1, unitPrice: 0 }],
+      });
+    }
+  }, [initialData, form]);
+
   const handleProductChange = (index, productId) => {
     const product = products.find(p => p.id === productId);
     if (product) {
@@ -105,6 +142,7 @@ export function CustomerInvoiceForm({ onInvoiceCreated }) {
     try {
       const invoiceData = {
         customer: data.customer,
+        prescription: data.prescription,
         items: data.items,
         paymentMethod: data.paymentMethod,
         staffId: data.staffId,
@@ -112,24 +150,34 @@ export function CustomerInvoiceForm({ onInvoiceCreated }) {
         discount: data.discount,
       };
 
-      const result = await createCustomerWithInvoice(invoiceData);
-
-      toast({
-        title: 'Customer & Invoice Created',
-        description: `Customer ${data.customer.name} and invoice created successfully.`
-      });
-
-      if (onInvoiceCreated) {
-        onInvoiceCreated(result);
+      if (initialData) {
+        // Update existing invoice
+        await updateInvoice(initialData.id, invoiceData);
+        toast({
+          title: 'Invoice Updated',
+          description: `Invoice ${initialData.id} updated successfully.`
+        });
+        if (onInvoiceUpdated) {
+          onInvoiceUpdated();
+        }
+      } else {
+        // Create new invoice
+        const result = await createCustomerWithInvoice(invoiceData);
+        toast({
+          title: 'Customer & Invoice Created',
+          description: `Customer ${data.customer.name} and invoice created successfully.`
+        });
+        if (onInvoiceCreated) {
+          onInvoiceCreated(result);
+        }
+        form.reset();
       }
-
-      form.reset();
     } catch (error) {
-      console.error('Error creating customer with invoice:', error);
+      console.error('Error saving invoice:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Failed to create customer and invoice. Please try again.'
+        description: 'Failed to save invoice. Please try again.'
       });
     } finally {
       setIsLoading(false);
@@ -177,7 +225,7 @@ export function CustomerInvoiceForm({ onInvoiceCreated }) {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="customer.name"
@@ -202,7 +250,7 @@ export function CustomerInvoiceForm({ onInvoiceCreated }) {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="customer.email"
@@ -216,7 +264,7 @@ export function CustomerInvoiceForm({ onInvoiceCreated }) {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="customer.address.city"
@@ -237,6 +285,63 @@ export function CustomerInvoiceForm({ onInvoiceCreated }) {
                   </FormItem>
                 )}
               />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Prescription Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Prescription (Optional)</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div>
+                <h4 className="font-medium mb-2">Right Eye</h4>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  <FormField control={form.control} name="prescription.rightEye.sph" render={({ field }) => (
+                    <FormItem><FormLabel>SPH</FormLabel><FormControl><Input type="number" step="0.25" {...field} onFocus={(e) => e.target.select()} /></FormControl></FormItem>
+                  )} />
+                  <FormField control={form.control} name="prescription.rightEye.cyl" render={({ field }) => (
+                    <FormItem><FormLabel>CYL</FormLabel><FormControl><Input type="number" step="0.25" {...field} onFocus={(e) => e.target.select()} /></FormControl></FormItem>
+                  )} />
+                  <FormField control={form.control} name="prescription.rightEye.axis" render={({ field }) => (
+                    <FormItem><FormLabel>Axis</FormLabel><FormControl><Input type="number" {...field} onFocus={(e) => e.target.select()} /></FormControl></FormItem>
+                  )} />
+                  <FormField control={form.control} name="prescription.rightEye.add" render={({ field }) => (
+                    <FormItem><FormLabel>Add</FormLabel><FormControl><Input type="number" step="0.25" {...field} onFocus={(e) => e.target.select()} /></FormControl></FormItem>
+                  )} />
+                  <FormField control={form.control} name="prescription.rightEye.pd" render={({ field }) => (
+                    <FormItem><FormLabel>PD</FormLabel><FormControl><Input type="number" {...field} onFocus={(e) => e.target.select()} /></FormControl></FormItem>
+                  )} />
+                  <FormField control={form.control} name="prescription.rightEye.bc" render={({ field }) => (
+                    <FormItem><FormLabel>BC</FormLabel><FormControl><Input type="number" {...field} onFocus={(e) => e.target.select()} /></FormControl></FormItem>
+                  )} />
+                </div>
+              </div>
+              <div>
+                <h4 className="font-medium mb-2">Left Eye</h4>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  <FormField control={form.control} name="prescription.leftEye.sph" render={({ field }) => (
+                    <FormItem><FormLabel>SPH</FormLabel><FormControl><Input type="number" step="0.25" {...field} onFocus={(e) => e.target.select()} /></FormControl></FormItem>
+                  )} />
+                  <FormField control={form.control} name="prescription.leftEye.cyl" render={({ field }) => (
+                    <FormItem><FormLabel>CYL</FormLabel><FormControl><Input type="number" step="0.25" {...field} onFocus={(e) => e.target.select()} /></FormControl></FormItem>
+                  )} />
+                  <FormField control={form.control} name="prescription.leftEye.axis" render={({ field }) => (
+                    <FormItem><FormLabel>Axis</FormLabel><FormControl><Input type="number" {...field} onFocus={(e) => e.target.select()} /></FormControl></FormItem>
+                  )} />
+                  <FormField control={form.control} name="prescription.leftEye.add" render={({ field }) => (
+                    <FormItem><FormLabel>Add</FormLabel><FormControl><Input type="number" step="0.25" {...field} onFocus={(e) => e.target.select()} /></FormControl></FormItem>
+                  )} />
+                  <FormField control={form.control} name="prescription.leftEye.pd" render={({ field }) => (
+                    <FormItem><FormLabel>PD</FormLabel><FormControl><Input type="number" {...field} onFocus={(e) => e.target.select()} /></FormControl></FormItem>
+                  )} />
+                  <FormField control={form.control} name="prescription.leftEye.bc" render={({ field }) => (
+                    <FormItem><FormLabel>BC</FormLabel><FormControl><Input type="number" {...field} onFocus={(e) => e.target.select()} /></FormControl></FormItem>
+                  )} />
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -263,7 +368,7 @@ export function CustomerInvoiceForm({ onInvoiceCreated }) {
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name={`items.${index}.productId`}
@@ -282,7 +387,7 @@ export function CustomerInvoiceForm({ onInvoiceCreated }) {
                           <SelectContent>
                             {products.map(product => (
                               <SelectItem key={product.id} value={product.id}>
-                                {product.name} - ${product.price}
+                                {product.name} - ₹{product.price}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -307,7 +412,7 @@ export function CustomerInvoiceForm({ onInvoiceCreated }) {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name={`items.${index}.unitPrice`}
@@ -315,7 +420,7 @@ export function CustomerInvoiceForm({ onInvoiceCreated }) {
                       <FormItem>
                         <FormLabel>Unit Price *</FormLabel>
                         <FormControl>
-                          <Input type="number" step="0.01" min="0" {...field} />
+                          <Input type="number" step="0.01" min="0" {...field} onFocus={(e) => e.target.select()} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -324,7 +429,7 @@ export function CustomerInvoiceForm({ onInvoiceCreated }) {
 
                   <div className="flex items-end">
                     <div className="p-2 bg-muted rounded text-sm font-medium">
-                      Subtotal: ${(form.watch(`items.${index}.quantity`) * form.watch(`items.${index}.unitPrice`)).toFixed(2)}
+                        Subtotal: ₹{(form.watch(`items.${index}.quantity`) * form.watch(`items.${index}.unitPrice`)).toFixed(2)}
                     </div>
                   </div>
                 </div>
@@ -353,7 +458,7 @@ export function CustomerInvoiceForm({ onInvoiceCreated }) {
             <CardTitle>Invoice Summary</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="paymentMethod"
@@ -383,9 +488,9 @@ export function CustomerInvoiceForm({ onInvoiceCreated }) {
                 name="discount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Discount ($)</FormLabel>
+                    <FormLabel>Discount (₹)</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.01" min="0" {...field} />
+                      <Input type="number" step="0.01" min="0" {...field} onFocus={(e) => e.target.select()} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -398,16 +503,16 @@ export function CustomerInvoiceForm({ onInvoiceCreated }) {
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span>Subtotal:</span>
-                <span>${calculateSubtotal().toFixed(2)}</span>
+                <span>₹{calculateSubtotal().toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Discount:</span>
-                <span>-${(form.watch('discount') || 0).toFixed(2)}</span>
+                <span>-₹{(form.watch('discount') || 0).toFixed(2)}</span>
               </div>
               <Separator />
               <div className="flex justify-between font-bold text-lg">
                 <span>Total:</span>
-                <span>${calculateTotal().toFixed(2)}</span>
+                <span>₹{calculateTotal().toFixed(2)}</span>
               </div>
             </div>
           </CardContent>
@@ -415,7 +520,7 @@ export function CustomerInvoiceForm({ onInvoiceCreated }) {
 
         <div className="flex justify-end pt-4">
           <Button type="submit" disabled={isLoading}>
-            {isLoading ? 'Creating...' : 'Create Customer & Invoice'}
+            {isLoading ? (initialData ? 'Updating...' : 'Creating...') : (initialData ? 'Update Invoice' : 'Create Customer & Invoice')}
           </Button>
         </div>
       </form>

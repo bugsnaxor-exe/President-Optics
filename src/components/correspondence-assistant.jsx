@@ -166,7 +166,7 @@ OctaCore Team`;
                     <FormItem>
                     <FormLabel>Reason for Communication</FormLabel>
                     <FormControl>
-                        <Input placeholder="e.g., Overdue balance of $50" {...field} />
+                        <Input placeholder="e.g., Overdue balance of ₹50" {...field} />
                     </FormControl>
                     <FormMessage />
                     </FormItem>

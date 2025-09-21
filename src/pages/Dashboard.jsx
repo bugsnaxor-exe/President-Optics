@@ -61,6 +61,7 @@ import { LoyaltyManagement } from '@/components/loyalty-management';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { AddProductForm } from '@/components/add-product-form';
+import { AddCustomerForm } from '@/components/add-customer-form';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { CustomerInvoiceForm } from '@/components/customer-invoice-form';
 import { CustomerHotspots } from '@/components/customer-hotspots';
@@ -72,7 +73,6 @@ import { useToast } from '@/hooks/use-toast';
 import { CSVLink } from 'react-csv';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import LocationReport from '@/components/location-report';
 import { EyewearCatalog } from '@/components/eyewear-catalog';
 import BrandLogos from '@/components/brand-logos';
 import BestSellerCard from '@/components/best-seller-card';
@@ -130,7 +130,6 @@ function LogoutButton({ fullWidth = false }) {
 
     const handleLogout = () => {
         document.cookie = "currentUser=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-        document.cookie = "userRole=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         document.cookie = "patientId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         navigate('/');
     };
@@ -300,7 +299,7 @@ function AdminDashboard() {
             title="Active Patients"
             icon={Users}
             value={`${patients.length}`}
-            description="Total patients in system"
+            description="Total customers in system"
             isLoading={isLoading}
           />
            <StatCard 
@@ -325,24 +324,26 @@ function AdminDashboard() {
             {isLoading ? (
                 <Skeleton className="h-48 w-full" />
             ) : (
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Role</TableHead>
-                            <TableHead>Last Login</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {allStaff.map(user => (
-                            <TableRow key={user.email}>
-                                <TableCell>{user.name}</TableCell>
-                                <TableCell>{user.email.includes('doctor') ? 'Doctor' : 'Staff'}</TableCell>
-                                <TableCell>{user.lastLogin}</TableCell>
+                <div className="overflow-x-auto">
+                    <Table className="min-w-full">
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="min-w-[150px]">Name</TableHead>
+                                <TableHead className="min-w-[100px]">Role</TableHead>
+                                <TableHead className="min-w-[150px]">Last Login</TableHead>
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
+                        </TableHeader>
+                        <TableBody>
+                            {allStaff.map(user => (
+                                <TableRow key={user.email}>
+                                    <TableCell>{user.name}</TableCell>
+                                    <TableCell>{user.email.includes('doctor') ? 'Doctor' : 'Staff'}</TableCell>
+                                    <TableCell>{user.lastLogin}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </div>
             )}
           </CardContent>
         </Card>
@@ -443,24 +444,26 @@ function OwnerDashboard() {
             {isLoading ? (
                 <Skeleton className="h-24 w-full" />
             ) : (
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Role</TableHead>
-                            <TableHead>Last Login</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {admins.map(user => (
-                            <TableRow key={user.email}>
-                                <TableCell>{user.name}</TableCell>
-                                <TableCell>Admin</TableCell>
-                                <TableCell>{user.lastLogin}</TableCell>
+                <div className="overflow-x-auto">
+                    <Table className="min-w-full">
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="min-w-[150px]">Name</TableHead>
+                                <TableHead className="min-w-[100px]">Role</TableHead>
+                                <TableHead className="min-w-[150px]">Last Login</TableHead>
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
+                        </TableHeader>
+                        <TableBody>
+                            {admins.map(user => (
+                                <TableRow key={user.email}>
+                                    <TableCell>{user.name}</TableCell>
+                                    <TableCell>Admin</TableCell>
+                                    <TableCell>{user.lastLogin}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </div>
             )}
           </CardContent>
         </Card>
@@ -515,28 +518,30 @@ function StaffDashboard() {
                  {isLoading ? (
                     <Skeleton className="h-48 w-full" />
                 ) : (
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>ID</TableHead>
-                                <TableHead>Patient</TableHead>
-                                <TableHead>Due Date</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead className="text-right">Total</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {recentInvoices.map(invoice => (
-                                <TableRow key={invoice.id}>
-                                    <TableCell className="font-mono">{invoice.id}</TableCell>
-                                    <TableCell>{invoice.patientName}</TableCell>
-                                    <TableCell>{invoice.dueDate}</TableCell>
-                                    <TableCell><Badge variant={invoice.status === 'Paid' ? 'default' : invoice.status === 'Overdue' ? 'destructive' : 'secondary'}>{invoice.status}</Badge></TableCell>
-                                    <TableCell className="text-right">{formatCurrency(convertedValues[`staff_invoice_${invoice.id}`] ?? invoice.total)}</TableCell>
+                    <div className="overflow-x-auto">
+                        <Table className="min-w-full">
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="min-w-[120px]">ID</TableHead>
+                                    <TableHead className="min-w-[150px]">Patient</TableHead>
+                                    <TableHead className="hidden sm:table-cell min-w-[120px]">Due Date</TableHead>
+                                    <TableHead className="min-w-[100px]">Status</TableHead>
+                                    <TableHead className="min-w-[120px] text-right">Total</TableHead>
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                            </TableHeader>
+                            <TableBody>
+                                {recentInvoices.map(invoice => (
+                                    <TableRow key={invoice.id}>
+                                        <TableCell className="font-mono">{invoice.id}</TableCell>
+                                        <TableCell>{invoice.patientName}</TableCell>
+                                        <TableCell className="hidden sm:table-cell">{invoice.dueDate}</TableCell>
+                                        <TableCell><Badge variant={invoice.status === 'Paid' ? 'default' : invoice.status === 'Overdue' ? 'destructive' : 'secondary'}>{invoice.status}</Badge></TableCell>
+                                        <TableCell className="text-right">{formatCurrency(convertedValues[`staff_invoice_${invoice.id}`] ?? invoice.total)}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
                 )}
             </CardContent>
         </Card>
@@ -590,17 +595,17 @@ function DoctorDashboard() {
                 <CardHeader className="flex flex-row items-center justify-between">
                     <div>
                         <CardTitle>Welcome, Doctor</CardTitle>
-                        <CardDescription>Here's an overview of your patients.</CardDescription>
+                        <CardDescription>Here's an overview of your customers.</CardDescription>
                     </div>
                      <Dialog open={isAddPatientOpen} onOpenChange={setAddPatientOpen}>
                          <DialogTrigger asChild>
-                             <Button><PlusCircle className="mr-2 h-4 w-4" /> Add Patient</Button>
+                             <Button><PlusCircle className="mr-2 h-4 w-4" /> Add Customer</Button>
                          </DialogTrigger>
                          <DialogContent className="sm:max-w-3xl max-h-[80vh] overflow-y-auto">
                                <DialogHeader>
-                                  <DialogTitle>Add New Patient</DialogTitle>
+                                  <DialogTitle>Add New Customer</DialogTitle>
                                   <DialogDescription>
-                                      Fill in the details below or scan a prescription to get started.
+                                      Fill in the details below to add a new customer to the system.
                                   </DialogDescription>
                               </DialogHeader>
                               <AddCustomerForm onAddCustomer={handleAddCustomer} />
@@ -611,24 +616,26 @@ function DoctorDashboard() {
                      {isLoading ? (
                         <Skeleton className="h-48 w-full" />
                     ) : (
-                        <Table>
-                            <TableHeader>
-                            <TableRow>
-                                <TableHead>Name</TableHead>
-                                <TableHead className="hidden md:table-cell">Phone</TableHead>
-                                <TableHead className="hidden sm:table-cell">Last Visit</TableHead>
-                            </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                            {patients.slice(0,5).map((patient) => (
-                                <TableRow key={patient.id}>
-                                    <TableCell className="font-medium">{patient.name}</TableCell>
-                                    <TableCell className="hidden md:table-cell">{patient.phone}</TableCell>
-                                    <TableCell className="hidden sm:table-cell">{patient.lastVisit}</TableCell>
+                        <div className="overflow-x-auto">
+                            <Table className="min-w-full">
+                                <TableHeader>
+                                <TableRow>
+                                    <TableHead className="min-w-[150px]">Name</TableHead>
+                                    <TableHead className="hidden md:table-cell min-w-[120px]">Phone</TableHead>
+                                    <TableHead className="hidden sm:table-cell min-w-[120px]">Last Visit</TableHead>
                                 </TableRow>
-                            ))}
-                            </TableBody>
-                        </Table>
+                                </TableHeader>
+                                <TableBody>
+                                {patients.slice(0,5).map((patient) => (
+                                    <TableRow key={patient.id}>
+                                        <TableCell className="font-medium">{patient.name}</TableCell>
+                                        <TableCell className="hidden md:table-cell">{patient.phone}</TableCell>
+                                        <TableCell className="hidden sm:table-cell">{patient.lastVisit}</TableCell>
+                                    </TableRow>
+                                ))}
+                                </TableBody>
+                            </Table>
+                        </div>
                     )}
                 </CardContent>
             </Card>
@@ -636,7 +643,7 @@ function DoctorDashboard() {
     )
 }
 
-function PatientDashboard() {
+function CustomerDashboard() {
     const { formatCurrency, registerValue, convertedValues } = useCurrency();
     const [overdueInvoices, setOverdueInvoices] = React.useState([]);
     const [lockout, setLockout] = React.useState(false);
@@ -772,58 +779,85 @@ function PatientDashboard() {
 
 
 function InvoiceManagementSection() {
-     const [view, setView] = React.useState('list');
-     const [selectedInvoice, setSelectedInvoice] = React.useState(null);
+      const [view, setView] = React.useState('list');
+      const [selectedInvoice, setSelectedInvoice] = React.useState(null);
+      const [editingInvoice, setEditingInvoice] = React.useState(null);
 
-    const handleCreateInvoice = (newInvoiceData) => {
-        const newInvoice = {
-            id: `INV-${Date.now()}`,
-            patientId: `PAT-XYZ`, // temp
-            status: 'Unpaid',
-            ...newInvoiceData
-        }
-        setSelectedInvoice(newInvoice);
-        setView('list'); // Switch to showing the new invoice
-    }
-    
-    if (selectedInvoice) {
-        return (
-            <div>
-                 <Button onClick={() => setSelectedInvoice(null)} variant="outline" className="mb-4">
-                    &larr; Back to Invoices
-                 </Button>
-                 <InvoiceDisplay invoice={selectedInvoice} />
-            </div>
-        )
-    }
-    
-    return (
-        <Card>
-            <CardHeader className="flex-row items-center justify-between">
-                <div>
-                    <CardTitle>Invoice Management</CardTitle>
-                    <CardDescription>Review past invoices or create a new one.</CardDescription>
-                </div>
-                <Button onClick={() => setView(view === 'list' ? 'create' : 'list')}>
-                    {view === 'list' ? (
-                        <><PlusCircle className="mr-2 h-4 w-4" /> Create Invoice</>
-                    ) : (
-                        <>&larr; Back to List</>
-                    )}
-                </Button>
-            </CardHeader>
-            <CardContent>
-                {view === 'list' ? (
-                    <InvoiceList onSelectInvoice={setSelectedInvoice} />
-                ) : (
-                    <InvoiceForm onCreate={handleCreateInvoice} />
-                )}
-            </CardContent>
-        </Card>
-    );
-}
+     const handleCreateInvoice = (newInvoiceData) => {
+         const newInvoice = {
+             id: `INV-${Date.now()}`,
+             patientId: `PAT-XYZ`, // temp
+             status: 'Unpaid',
+             ...newInvoiceData
+         }
+         setSelectedInvoice(newInvoice);
+         setView('list'); // Switch to showing the new invoice
+     }
 
-function InvoiceList({ onSelectInvoice }) {
+     const handleEditInvoice = (invoice) => {
+         setEditingInvoice(invoice);
+         setView('edit');
+     }
+
+     const handleInvoiceUpdated = () => {
+         setEditingInvoice(null);
+         setView('list');
+         // Optionally refresh the invoice list
+     }
+
+     if (selectedInvoice) {
+         return (
+             <div>
+                  <Button onClick={() => setSelectedInvoice(null)} variant="outline" className="mb-4">
+                     &larr; Back to Invoices
+                  </Button>
+                  <InvoiceDisplay invoice={selectedInvoice} />
+             </div>
+         )
+     }
+
+     return (
+         <Card>
+             <CardHeader className="flex-row items-center justify-between">
+                 <div>
+                     <CardTitle>Invoice Management</CardTitle>
+                     <CardDescription>Review past invoices or create a new one.</CardDescription>
+                 </div>
+                 {view === 'list' && (
+                     <Button onClick={() => setView('create')}>
+                         <PlusCircle className="mr-2 h-4 w-4" /> Create Invoice
+                     </Button>
+                 )}
+                 {view === 'create' && (
+                     <Button onClick={() => setView('list')} variant="outline">
+                         &larr; Back to List
+                     </Button>
+                 )}
+                 {view === 'edit' && (
+                     <Button onClick={() => { setView('list'); setEditingInvoice(null); }} variant="outline">
+                         &larr; Back to List
+                     </Button>
+                 )}
+             </CardHeader>
+             <CardContent>
+                 {view === 'list' && (
+                     <InvoiceList onSelectInvoice={setSelectedInvoice} onEditInvoice={handleEditInvoice} />
+                 )}
+                 {view === 'create' && (
+                     <InvoiceForm onCreate={handleCreateInvoice} />
+                 )}
+                 {view === 'edit' && editingInvoice && (
+                     <CustomerInvoiceForm
+                         initialData={editingInvoice}
+                         onInvoiceUpdated={handleInvoiceUpdated}
+                     />
+                 )}
+             </CardContent>
+         </Card>
+     );
+ }
+
+function InvoiceList({ onSelectInvoice, onEditInvoice }) {
      const [invoices, setInvoices] = React.useState([]);
     const { formatCurrency, registerValue, convertedValues } = useCurrency();
     const [isLoading, setIsLoading] = React.useState(true);
@@ -845,39 +879,45 @@ function InvoiceList({ onSelectInvoice }) {
     }, [registerValue, invoices]);
 
     return (
-         <>
-            {isLoading ? (
-                <Skeleton className="h-64 w-full" />
-            ) : (
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>ID</TableHead>
-                            <TableHead>Patient</TableHead>
-                            <TableHead>Due Date</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead className="text-right">Total</TableHead>
-                            <TableHead></TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {invoices.map(invoice => (
-                            <TableRow key={invoice.id}>
-                                <TableCell className="font-mono">{invoice.id}</TableCell>
-                                <TableCell>{invoice.patientName}</TableCell>
-                                <TableCell>{invoice.dueDate}</TableCell>
-                                <TableCell><Badge variant={invoice.status === 'Paid' ? 'default' : invoice.status === 'Overdue' ? 'destructive' : 'secondary'}>{invoice.status}</Badge></TableCell>
-                                <TableCell className="text-right">{formatCurrency(convertedValues[`inv_manage_${invoice.id}`] ?? invoice.total)}</TableCell>
-                                <TableCell className="text-right">
-                                    <Button variant="ghost" size="sm" onClick={() => onSelectInvoice(invoice)}>View</Button>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            )}
-        </>
-    )
+          <>
+             {isLoading ? (
+                 <Skeleton className="h-64 w-full" />
+             ) : (
+                 <div className="overflow-x-auto">
+                     <Table className="min-w-full">
+                         <TableHeader>
+                             <TableRow>
+                                 <TableHead className="min-w-[120px]">ID</TableHead>
+                                 <TableHead className="min-w-[150px]">Patient</TableHead>
+                                 <TableHead className="hidden sm:table-cell min-w-[120px]">Due Date</TableHead>
+                                 <TableHead className="min-w-[100px]">Status</TableHead>
+                                 <TableHead className="min-w-[120px] text-right">Total</TableHead>
+                                 <TableHead className="min-w-[80px]"></TableHead>
+                                 <TableHead className="hidden md:table-cell min-w-[80px]"></TableHead>
+                             </TableRow>
+                         </TableHeader>
+                         <TableBody>
+                             {invoices.map(invoice => (
+                                 <TableRow key={invoice.id}>
+                                     <TableCell className="font-mono">{invoice.id}</TableCell>
+                                     <TableCell>{invoice.patientName}</TableCell>
+                                     <TableCell className="hidden sm:table-cell">{invoice.dueDate}</TableCell>
+                                     <TableCell><Badge variant={invoice.status === 'Paid' ? 'default' : invoice.status === 'Overdue' ? 'destructive' : 'secondary'}>{invoice.status}</Badge></TableCell>
+                                     <TableCell className="text-right">{formatCurrency(convertedValues[`inv_manage_${invoice.id}`] ?? invoice.total)}</TableCell>
+                                     <TableCell className="text-right">
+                                         <Button variant="ghost" size="sm" onClick={() => onSelectInvoice(invoice)}>View</Button>
+                                     </TableCell>
+                                     <TableCell className="hidden md:table-cell text-right">
+                                         <Button variant="ghost" size="sm" onClick={() => onEditInvoice && onEditInvoice(invoice)}>Edit</Button>
+                                     </TableCell>
+                                 </TableRow>
+                             ))}
+                         </TableBody>
+                     </Table>
+                 </div>
+             )}
+         </>
+     )
 }
 
 const FeatureCard = ({ title, description, children, isLoading }) => (
@@ -1085,21 +1125,6 @@ function ReportsSection() {
                 ...p,
                 stockValue: p.stock * p.price
             }));
-        } else if (reportType === 'locations') {
-              headers = [
-                { label: 'City', key: 'city' },
-                { label: 'Client Count', key: 'clientCount' },
-            ];
-              const counts = initialPatients.reduce((acc, patient) => {
-                const city = patient.address.city;
-                acc[city] = (acc[city] || 0) + 1;
-                return acc;
-            }, {});
-            data = Object.entries(counts).map(([city, count]) => ({
-                city,
-                clientCount: count,
-            }));
-        }
 
         setCsvHeaders(headers);
         setCsvData(data);
@@ -1140,11 +1165,10 @@ function ReportsSection() {
                             </Select>
                         </div>
                          <TabsList className="mt-4">
-                            <TabsTrigger value="sales">Products Sold</TabsTrigger>
-                            <TabsTrigger value="purchases">Products Purchased</TabsTrigger>
-                            <TabsTrigger value="stock">Products in Stock</TabsTrigger>
-                            <TabsTrigger value="locations">Locations</TabsTrigger>
-                        </TabsList>
+                             <TabsTrigger value="sales">Products Sold</TabsTrigger>
+                             <TabsTrigger value="purchases">Products Purchased</TabsTrigger>
+                             <TabsTrigger value="stock">Products in Stock</TabsTrigger>
+                         </TabsList>
                     </div>
                      <div className="flex items-center gap-2 print-hidden">
                         <Button variant="outline" size="sm" onClick={handlePrint}>
@@ -1183,9 +1207,6 @@ function ReportsSection() {
                     <TabsContent value="stock">
                        <AuditReport detailed={true} dateRange={dateRange} />
                     </TabsContent>
-                    <TabsContent value="locations">
-                        <LocationReport />
-                    </TabsContent>
                 </CardContent>
             </Tabs>
         </Card>
@@ -1194,34 +1215,31 @@ function ReportsSection() {
 
 
 export default function UnifiedDashboard() {
-   const [userRole, setUserRole] = React.useState(undefined);
-   const [patient, setPatient] = React.useState(null);
-   const [products, setProducts] = React.useState([]);
-   const [isLoading, setIsLoading] = React.useState(true);
-   const { t } = useLanguage();
-   const { toast } = useToast();
+    const [patient, setPatient] = React.useState(null);
+    const [products, setProducts] = React.useState([]);
+    const [isLoading, setIsLoading] = React.useState(true);
+    const { t } = useLanguage();
+    const { toast } = useToast();
 
-   React.useEffect(() => {
-     const role = getCookie('userRole');
-     setUserRole(role);
+    React.useEffect(() => {
+      async function fetchData() {
+          setIsLoading(true);
+          const patientId = getCookie('patientId');
+          if (patientId) {
+              const allPatients = await getPatients();
+              setPatient(allPatients.patients?.find(p => p.id === patientId) || null);
+          }
+          const prods = await getProducts();
+          setProducts(prods);
+          setIsLoading(false);
+      }
+      fetchData();
 
-     async function fetchData() {
-         setIsLoading(true);
-         const patientId = getCookie('patientId');
-         if (patientId) {
-             const allPatients = await getPatients();
-             setPatient(allPatients.patients?.find(p => p.id === patientId) || null);
-         }
-         const prods = await getProducts();
-         setProducts(prods);
-         setIsLoading(false);
-     }
-     fetchData();
-
-   }, []);
+    }, []);
 
    const handleAddProduct = async (productData) => {
        try {
+           // Price is already in INR (default currency)
            const newProduct = await createProduct(productData);
            console.log('Product created:', newProduct);
 
@@ -1282,6 +1300,28 @@ export default function UnifiedDashboard() {
     const displayTotalRevenue = convertedValues[totalRevenueId] ?? totalRevenue;
     const displayOutstandingInvoices = convertedValues[outstandingInvoicesId] ?? outstandingInvoicesValue;
 
+    const [isAddCustomerOpen, setAddCustomerOpen] = React.useState(false);
+
+    const handleAddCustomer = async (newCustomerData) => {
+      try {
+        const createdCustomer = await createPatient(newCustomerData);
+        console.log('Customer created:', createdCustomer);
+        setPatients(prev => [createdCustomer, ...prev]);
+        setAddCustomerOpen(false);
+        toast({
+          title: 'Customer Added',
+          description: `${createdCustomer.name} has been added to the system.`
+        });
+      } catch (error) {
+        console.error('Error creating customer:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Failed to add customer. Please try again.'
+        });
+      }
+    };
+
     return (
       <div className="space-y-8">
         <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
@@ -1300,10 +1340,10 @@ export default function UnifiedDashboard() {
             isLoading={isLoading}
           />
           <StatCard
-            title="Active Patients"
+            title="Active Customers"
             icon={Users}
             value={`${patients.length}`}
-            description="Total patients in system"
+            description="Total customers in system"
             isLoading={isLoading}
           />
           <StatCard
@@ -1326,10 +1366,23 @@ export default function UnifiedDashboard() {
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Create New Invoice
               </Button>
-              <Button className="justify-start" variant="outline">
-                <Users className="mr-2 h-4 w-4" />
-                Add New Patient
-              </Button>
+              <Dialog open={isAddCustomerOpen} onOpenChange={setAddCustomerOpen}>
+                <DialogTrigger asChild>
+                  <Button className="justify-start" variant="outline">
+                    <Users className="mr-2 h-4 w-4" />
+                    Add New Customer
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-3xl max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Add New Customer</DialogTitle>
+                    <DialogDescription>
+                      Fill in the details below to add a new customer to the system.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <AddCustomerForm onAddCustomer={handleAddCustomer} />
+                </DialogContent>
+              </Dialog>
               <Button className="justify-start" variant="outline">
                 <Calendar className="mr-2 h-4 w-4" />
                 Schedule Appointment

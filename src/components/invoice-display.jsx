@@ -44,7 +44,7 @@ export function InvoiceDisplay({ invoice }) {
     const { toast } = useToast();
     const [isPrinting, setIsPrinting] = React.useState(false);
     const [advancePaid, setAdvancePaid] = React.useState(0);
-    const { formatCurrency, registerValue, convertedValues, currency, conversionRate } = useCurrency();
+    const { formatCurrency, registerValue, convertedValues } = useCurrency();
 
     const subtotal = invoice.items.reduce((acc, item) => acc + item.quantity * item.unitPrice, 0);
     const tax = subtotal * 0.08; // 8% tax
@@ -54,8 +54,8 @@ export function InvoiceDisplay({ invoice }) {
     const taxId = `inv_tax_${invoice.id}`;
     const totalId = `inv_tot_${invoice.id}`;
     
-    // We want the advance paid to be independent of currency conversion
-    const advancePaidInBase = advancePaid / (currency === 'USD' ? 1 : conversionRate);
+    // Advance paid is in INR
+    const advancePaidInBase = advancePaid;
 
     React.useEffect(() => {
         registerValue(subtotalId, subtotal);
@@ -119,8 +119,8 @@ export function InvoiceDisplay({ invoice }) {
 
 
     return (
-        <div className="flex flex-col h-[80vh]">
-            <div id="invoice" className="flex-grow overflow-auto p-8 bg-card">
+        <div className="flex flex-col min-h-[60vh] max-h-[80vh]">
+            <div id="invoice" className="flex-grow overflow-auto p-4 md:p-8 bg-card">
                  <header className="flex justify-between items-start mb-8">
                     <div className="flex flex-col items-center">
                         <Logo />
@@ -136,13 +136,13 @@ export function InvoiceDisplay({ invoice }) {
                     </div>
                 </header>
 
-                <div className="grid grid-cols-2 gap-8 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                     <div>
                         <h2 className="font-semibold text-muted-foreground mb-2">BILL TO</h2>
                         <p className="font-bold text-lg">{invoice.patientName}</p>
                     </div>
-                    <div className="text-right">
-                        <div className="grid grid-cols-2">
+                    <div className="text-left md:text-right">
+                        <div className="grid grid-cols-2 gap-2">
                            <span className="font-semibold text-muted-foreground">Issue Date:</span>
                            <span>{invoice.issueDate}</span>
                            <span className="font-semibold text-muted-foreground">Due Date:</span>

@@ -11,7 +11,7 @@ import { Award, Star, TrendingUp, Gift, Download, Printer, Loader2, Gem, ShieldC
 import { cn } from '@/lib/utils';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { getPatients } from '../lib/api';
+import { getPatients, updateCustomer } from '../lib/api';
 import { Skeleton } from './ui/skeleton';
 import Logo from './logo';
 
@@ -48,7 +48,7 @@ const rewards = [
     { points: 2000, description: 'Free Comprehensive Eye Exam' },
     { points: 1500, description: '50% off any pair of frames' },
     { points: 1000, description: '15% off total purchase' },
-    { points: 500, description: '$10 off contact lenses' },
+    { points: 500, description: '₹10 off contact lenses' },
 ];
 
 const getLoyaltyTier = (points) => {
@@ -125,7 +125,7 @@ export function LoyaltyManagement() {
         fetchData();
     }, []);
 
-    const handleAddPoints = (patientId) => {
+    const handleAddPoints = async (patientId) => {
         const points = pointsToAdd[patientId];
         if (!points || points <= 0 || isNaN(points)) {
             toast({
@@ -138,20 +138,40 @@ export function LoyaltyManagement() {
 
         const patientName = patientList.find(p => p.id === patientId)?.name;
 
+        const newPoints = (patientList.find(p => p.id === patientId)?.loyaltyPoints || 0) + points;
+        const newTier = getLoyaltyTier(newPoints);
+
         setPatientList(prev => prev.map(p => {
             if (p.id === patientId) {
-                const newPoints = (p.loyaltyPoints || 0) + points;
-                return { ...p, loyaltyPoints: newPoints, loyaltyTier: getLoyaltyTier(newPoints) };
+                return { ...p, loyaltyPoints: newPoints, loyaltyTier: newTier };
             }
             return p;
         }));
 
         setPointsToAdd(prev => ({...prev, [patientId]: 0}));
 
-        toast({
-            title: "Points Added",
-            description: `Successfully added ${points} points to ${patientName}.`
-        })
+        try {
+            await updateCustomer(patientId, { loyaltyPoints: newPoints, loyaltyTier: newTier });
+            toast({
+                title: "Points Added",
+                description: `Successfully added ${points} points to ${patientName}.`
+            });
+        } catch (error) {
+            console.error('Error updating customer:', error);
+            // Revert the state if update fails
+            setPatientList(prev => prev.map(p => {
+                if (p.id === patientId) {
+                    const oldPoints = (p.loyaltyPoints || 0) - points;
+                    return { ...p, loyaltyPoints: oldPoints, loyaltyTier: getLoyaltyTier(oldPoints) };
+                }
+                return p;
+            }));
+            toast({
+                variant: 'destructive',
+                title: 'Update Failed',
+                description: 'Failed to save points. Please try again.'
+            });
+        }
     };
     
     const handlePrint = async (action, patient) => {

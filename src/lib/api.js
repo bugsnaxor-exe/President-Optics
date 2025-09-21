@@ -17,30 +17,11 @@ const cache = new Map();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 // Customer Management
-export async function createCustomer(data) {
-  await delay();
-  const newCustomer = {
-    id: `CUS${Date.now()}`,
-    ...data,
-    createdAt: new Date().toISOString()
-  };
-  return newCustomer;
-}
 
 export async function getCustomers({ page = 1, limit = 10, search = "" } = {}) {
-  await delay();
-  // For demo, return patients as customers since we don't have separate customers
-  const filtered = patients.filter(p =>
-    search ? p.name.toLowerCase().includes(search.toLowerCase()) : true
-  );
-  const start = (page - 1) * limit;
-  const end = start + limit;
-  return {
-    customers: filtered.slice(start, end),
-    total: filtered.length,
-    page,
-    limit
-  };
+   const response = await fetch(`/api/patient?page=${page}&limit=${limit}&search=${encodeURIComponent(search)}`);
+   if (!response.ok) throw new Error('Failed to fetch customers');
+   return await response.json();
 }
 
 export async function getCustomerById(id) {
@@ -58,8 +39,8 @@ export async function createCustomerWithInvoice(data) {
   const newInvoice = {
     id: `INV-${Date.now()}`,
     ...data.invoice,
-    patientId: newCustomer.id,
-    patientName: newCustomer.name,
+    customerId: newCustomer.id,
+    customerName: newCustomer.name,
     status: 'Unpaid',
     createdAt: new Date().toISOString()
   };
@@ -68,7 +49,7 @@ export async function createCustomerWithInvoice(data) {
 
 export async function getCustomerHotspots() {
   await delay();
-  // Mock hotspots based on patient cities
+  // Mock hotspots based on customer cities
   const cityCounts = patients.reduce((acc, p) => {
     acc[p.address.city] = (acc[p.address.city] || 0) + 1;
     return acc;
@@ -81,37 +62,27 @@ export async function getCustomerHotspots() {
   }));
 }
 
-// Patient Management
-export async function createPatient(data) {
-  await delay();
-  const newPatient = {
-    id: `PAT${Date.now()}`,
-    ...data,
-    lastVisit: new Date().toISOString().split('T')[0],
-    loyaltyPoints: 0,
-    loyaltyTier: 'Bronze'
-  };
-  return newPatient;
+// Customer Management
+export async function createCustomer(data) {
+   await delay();
+   const newCustomer = {
+     id: `CUS${Date.now()}`,
+     ...data,
+     lastVisit: new Date().toISOString().split('T')[0],
+     loyaltyPoints: 0,
+     loyaltyTier: 'Bronze'
+   };
+   return newCustomer;
 }
 
-export async function getPatients({ page = 1, limit = 10, search = "" } = {}) {
-  await delay();
-  const filtered = patients.filter(p =>
-    search ? p.name.toLowerCase().includes(search.toLowerCase()) : true
-  );
-  const start = (page - 1) * limit;
-  const end = start + limit;
-  return {
-    patients: filtered.slice(start, end),
-    total: filtered.length,
-    page,
-    limit
-  };
-}
-
-export async function getPatientById(id) {
-  await delay();
-  return patients.find(p => p.id === id) || null;
+export async function updateCustomer(id, data) {
+   const response = await fetch(`/api/patient/${id}`, {
+       method: 'PUT',
+       headers: { 'Content-Type': 'application/json' },
+       body: JSON.stringify(data)
+   });
+   if (!response.ok) throw new Error('Failed to update customer');
+   return await response.json();
 }
 
 // Prescription Management
@@ -125,11 +96,11 @@ export async function createPrescription(data) {
   return newPrescription;
 }
 
-export async function getPrescriptions({ page = 1, limit = 10, patientId } = {}) {
+export async function getPrescriptions({ page = 1, limit = 10, customerId } = {}) {
   await delay();
-  let filtered = patients.flatMap(p => p.prescription ? [{ ...p.prescription, patientId: p.id, patientName: p.name }] : []);
-  if (patientId) {
-    filtered = filtered.filter(p => p.patientId === patientId);
+  let filtered = patients.flatMap(p => p.prescription ? [{ ...p.prescription, customerId: p.id, customerName: p.name }] : []);
+  if (customerId) {
+    filtered = filtered.filter(p => p.customerId === customerId);
   }
   const start = (page - 1) * limit;
   const end = start + limit;
@@ -143,8 +114,8 @@ export async function getPrescriptions({ page = 1, limit = 10, patientId } = {})
 
 export async function getPrescriptionById(id) {
   await delay();
-  const patient = patients.find(p => p.prescription && p.id === id);
-  return patient ? { ...patient.prescription, patientId: patient.id, patientName: patient.name } : null;
+  const customer = patients.find(p => p.prescription && p.id === id);
+  return customer ? { ...customer.prescription, customerId: customer.id, customerName: customer.name } : null;
 }
 
 // Additional functions for existing components compatibility
@@ -154,27 +125,51 @@ export async function getInvoices() {
 }
 
 export async function createProduct(productData) {
-  const localApiUrl = 'http://localhost:3000/api/products'; // Local API for adding products
+   const localApiUrl = 'http://localhost:3000/api/products'; // Local API for adding products
 
-  try {
-    const response = await fetch(localApiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(productData),
-    });
+   try {
+       const response = await fetch(localApiUrl, {
+           method: 'POST',
+           headers: {
+               'Content-Type': 'application/json',
+           },
+           body: JSON.stringify(productData),
+       });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+       if (!response.ok) {
+           throw new Error(`HTTP error! status: ${response.status}`);
+       }
 
-    const newProduct = await response.json();
-    return newProduct;
-  } catch (error) {
-    console.error('Error creating product:', error);
-    throw error;
-  }
+       const newProduct = await response.json();
+       return newProduct;
+   } catch (error) {
+       console.error('Error creating product:', error);
+       throw error;
+   }
+}
+
+export async function updateInvoice(invoiceId, invoiceData) {
+   const localApiUrl = `http://localhost:3000/api/invoices/${invoiceId}`;
+
+   try {
+       const response = await fetch(localApiUrl, {
+           method: 'PUT',
+           headers: {
+               'Content-Type': 'application/json',
+           },
+           body: JSON.stringify(invoiceData),
+       });
+
+       if (!response.ok) {
+           throw new Error(`HTTP error! status: ${response.status}`);
+       }
+
+       const updatedInvoice = await response.json();
+       return updatedInvoice;
+   } catch (error) {
+       console.error('Error updating invoice:', error);
+       throw error;
+   }
 }
 
 export async function getProducts(retryCount = 0) {
@@ -219,13 +214,12 @@ export async function getProducts(retryCount = 0) {
     const apiData = await externalResponse.json();
 
     // Transform API data to match expected format
-    // Convert prices from INR to USD (assuming API prices are in INR)
-    const inrToUsdRate = 1 / 83.50; // Based on MOCK_RATES
+    // API prices are in INR, keep as is
     const externalProducts = apiData.map(product => ({
       id: product.id.toString(), // Convert to string to match mock format
       name: product.product_name,
       description: product.description || '',
-      price: parseFloat(product.price) * inrToUsdRate, // Convert INR to USD
+      price: parseFloat(product.price), // Keep in INR
       stock: product.stock,
       type: product.product_type,
       brand: product.brand || '',
@@ -318,3 +312,6 @@ export async function getAdminPaymentNotices() {
 // Aliases for backward compatibility
 export const getProduct = getProducts;
 export const getInvoice = getInvoices;
+export const getPatients = getCustomers;
+export const getPatientById = getCustomerById;
+export const createPatient = createCustomer;

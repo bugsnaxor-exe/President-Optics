@@ -4,31 +4,7 @@ var router = express.Router();
 // -----------------------------
 // Mock Data Stores
 // -----------------------------
-const patients = [
-  {
-    id: 'PAT001',
-    name: 'Priya Sharma',
-    age: 28,
-    gender: 'Female',
-    email: 'priya.s@example.com',
-    phone: '555-0101',
-    address: { city: 'Optic City', state: 'CA' },
-    insuranceProvider: 'Global Health',
-    insurancePolicyNumber: 'GH-12345678',
-    prescription: {
-      sphere: { right: -1.25, left: -1.5 },
-      cylinder: { right: -0.5, left: -0.75 },
-      axis: { right: 180, left: 175 },
-      add: { right: 0, left: 0 },
-    },
-    lastVisit: '2023-10-15',
-    loyaltyPoints: 1250,
-    loyaltyTier: 'Silver',
-    shopId: 'SHOP001',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-];
+const { patients } = require('../src/lib/data.js');
 
 let customers = [
   {
@@ -109,6 +85,14 @@ router.get('/customer/:id', function (req, res) {
   res.json({ ...customer, invoices: [] });
 });
 
+router.put('/customer/:id', function (req, res) {
+  const id = req.params.id;
+  const customerIndex = customers.findIndex(c => c.id === parseInt(id));
+  if (customerIndex === -1) return res.status(404).json({ error: 'Customer not found' });
+  customers[customerIndex] = { ...customers[customerIndex], ...req.body, updatedAt: new Date().toISOString() };
+  res.json(customers[customerIndex]);
+});
+
 router.get('/customer/hotspots', function (req, res) {
   res.json([
     { address: 'Main Street', customerCount: 15 },
@@ -140,6 +124,7 @@ router.post('/customer/invoice', function (req, res) {
     paidAmount,
     totalAmount,
     status: paidAmount >= totalAmount ? 'PAID' : 'UNPAID',
+    prescription: req.body.prescription || null,
     items: items.map((it, idx) => ({
       id: idx + 1,
       quantity: it.quantity || 1,
@@ -232,6 +217,14 @@ router.get('/patient', function (req, res) {
   res.json({ patients: data, total, page: p, totalPages });
 });
 
+router.put('/patient/:id', function (req, res) {
+  const id = req.params.id;
+  const patientIndex = patients.findIndex(p => p.id === id);
+  if (patientIndex === -1) return res.status(404).json({ error: 'Patient not found' });
+  patients[patientIndex] = { ...patients[patientIndex], ...req.body, updatedAt: new Date().toISOString() };
+  res.json(patients[patientIndex]);
+});
+
 // GET /api/invoices - Mock invoices data
 let invoices = [
   {
@@ -264,7 +257,17 @@ let invoices = [
 ];
 
 router.get('/invoices', function (req, res) {
-  res.json(invoices);
+   res.json(invoices);
+});
+
+router.put('/invoices/:id', function (req, res) {
+   const id = req.params.id;
+   const index = invoices.findIndex(inv => inv.id === id);
+   if (index === -1) return res.status(404).json({ error: 'Invoice not found' });
+
+   const updatedInvoice = { ...invoices[index], ...req.body, updatedAt: new Date().toISOString() };
+   invoices[index] = updatedInvoice;
+   res.json(updatedInvoice);
 });
 
 // GET /api/products - Mock products data

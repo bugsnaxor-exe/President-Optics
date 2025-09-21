@@ -160,28 +160,28 @@ export function AddProductForm({ onAddProduct }) {
                                 </FormItem>
                             )}
                         />
-                        <div className="grid grid-cols-2 gap-4">
-                             <FormField 
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                             <FormField
                                 control={form.control}
                                 name="price"
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Price</FormLabel>
                                         <FormControl>
-                                            <Input type="number" placeholder="0.00" {...field} />
+                                            <Input type="number" placeholder="0.00" {...field} onFocus={(e) => e.target.select()} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
                                 )}
                             />
-                             <FormField 
+                             <FormField
                                 control={form.control}
                                 name="stock"
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Stock</FormLabel>
                                         <FormControl>
-                                            <Input type="number" placeholder="0" {...field} />
+                                            <Input type="number" placeholder="0" {...field} onFocus={(e) => e.target.select()} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>

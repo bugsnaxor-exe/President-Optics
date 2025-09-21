@@ -4,10 +4,10 @@ export const currencies = [
     { code: 'INR', name: 'Indian Rupee', locale: 'en-IN' },
 ];
 
-// Rates are against 1 USD
+// Rates are against 1 INR
 export const MOCK_RATES = {
-    USD: 1.00,
-    INR: 83.50,
+    INR: 1.00,
+    USD: 1 / 83.50,
 };
 
 export const shops = [

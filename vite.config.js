@@ -22,7 +22,7 @@ export default defineConfig({
     host: true, // Allow external connections
     proxy: {
       "/api": {
-        target: "https://staff-optical-production.up.railway.app",
+        target: "http://localhost:3000",
         changeOrigin: true,
         secure: false,
         timeout: 10000,

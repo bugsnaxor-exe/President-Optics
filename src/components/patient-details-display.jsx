@@ -26,7 +26,6 @@ const DetailItem = ({ label, value }) => (
 export function PatientDetailsDisplay({ patient }) {
     const { toast } = useToast();
     const [isPrinting, setIsPrinting] = React.useState(false);
-    const userRole = getCookie('userRole');
     
     const handlePrint = async (action) => {
         const patientDetailsElement = document.getElementById('patient-details-printable');
@@ -141,19 +140,17 @@ export function PatientDetailsDisplay({ patient }) {
                         </Card>
                     </div>
                 </div>
-             </div>
-             {userRole !== 'patient' && (
-                <div className="p-4 border-t mt-4 flex justify-start gap-2 bg-muted/40 print-hidden">
-                    <Button variant="outline" onClick={() => handlePrint('download')} disabled={isPrinting}>
-                        {isPrinting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
-                        Download PDF
-                    </Button>
-                    <Button onClick={() => handlePrint('print')} disabled={isPrinting}>
-                        {isPrinting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Printer className="mr-2 h-4 w-4" />}
-                        Print Details
-                    </Button>
-                </div>
-             )}
+              </div>
+              <div className="p-4 border-t mt-4 flex justify-start gap-2 bg-muted/40 print-hidden">
+                  <Button variant="outline" onClick={() => handlePrint('download')} disabled={isPrinting}>
+                      {isPrinting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                      Download PDF
+                  </Button>
+                  <Button onClick={() => handlePrint('print')} disabled={isPrinting}>
+                      {isPrinting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Printer className="mr-2 h-4 w-4" />}
+                      Print Details
+                  </Button>
+              </div>
         </div>
     );
 }

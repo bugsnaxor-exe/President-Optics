@@ -11,7 +11,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useLanguage } from '@/context/language-context';
 
 function SubmitButton({ pending }) {
@@ -48,25 +47,14 @@ export default function LoginPage() {
             return;
         }
 
-        let role = 'staff'; // default role
-
-        // Demo roles based on email
-        if (email.startsWith('admin')) {
-            role = 'admin';
-        } else if (email.startsWith('owner')) {
-            role = 'owner';
-        } else if (email.startsWith('doctor')) {
-            role = 'doctor';
-        } else if (email.startsWith('patient')) {
-            role = 'patient';
-            // For demo purposes, associate this login with a specific patient ID
+        // For demo purposes, associate patient login with a specific patient ID
+        if (email.startsWith('patient')) {
             document.cookie = `patientId=PAT002; max-age=86400; path=/`;
         }
 
         // Simulate async action
         setTimeout(() => {
             document.cookie = `currentUser=${email}; max-age=86400; path=/`;
-            document.cookie = `userRole=${role}; max-age=86400; path=/`;
 
             toast({
                 title: t('loginSuccess'),
@@ -77,9 +65,6 @@ export default function LoginPage() {
         }, 1000);
     }
 
-    const handleRoleChange = (newEmail) => {
-        setEmail(newEmail);
-    }
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-background p-4">
@@ -87,20 +72,6 @@ export default function LoginPage() {
                <div className="text-white hidden md:block">
                     <h1 className="text-6xl font-bold text-yellow-400" style={{fontFamily: 'serif'}}>OctaCore</h1>
                     <p className="text-4xl mt-2 text-white" style={{fontFamily: 'serif'}}>{t('loginPage_tagline')}</p>
-                    <div className="mt-8 space-y-4 text-lg">
-                        <Label>{t('loginPage_selectRole')}</Label>
-                        <Select onValueChange={handleRoleChange} defaultValue="admin@example.com">
-                            <SelectTrigger className="w-[280px] bg-gray-100 border-gray-200 text-black">
-                                <SelectValue placeholder={t('loginPage_selectRolePlaceholder')} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="admin@example.com">{t('role_admin')}</SelectItem>
-                                <SelectItem value="owner@example.com">{t('role_owner')}</SelectItem>
-                                <SelectItem value="staff@example.com">{t('role_staff')}</SelectItem>
-                                <SelectItem value="doctor@example.com">{t('role_doctor')}</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
                </div>
 
                 <Card className="w-full max-w-sm mx-auto shadow-2xl rounded-2xl">

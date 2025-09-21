@@ -27,83 +27,45 @@ function getExchangeRate(from, to) {
 const CurrencyContext = React.createContext(undefined);
 
 export function CurrencyProvider({ children }) {
-  const [currency, setCurrencyState] = React.useState('INR');
-  const [conversionRate, setConversionRate] = React.useState(1);
-  const [originalValues, setOriginalValues] = React.useState({});
-  const [convertedValues, setConvertedValues] = React.useState({});
-  const [dynamicValues, setDynamicValues] = React.useState({});
-  const [isMounted, setIsMounted] = React.useState(false);
+   const currency = 'INR'; // Fixed to INR only
+   const conversionRate = 1; // No conversion
+   const [originalValues, setOriginalValues] = React.useState({});
+   const [convertedValues, setConvertedValues] = React.useState({});
+   const [dynamicValues, setDynamicValues] = React.useState({});
+   const [isMounted, setIsMounted] = React.useState(false);
 
-  React.useEffect(() => {
-    setIsMounted(true);
-    try {
-        const storedCurrency = localStorage.getItem('app-currency');
-        if (storedCurrency && currencies.some(c => c.code === storedCurrency)) {
-            setCurrencyState(storedCurrency);
-        }
-    } catch (error) {
-        console.warn('Could not read currency from localStorage', error);
-    }
-  }, []);
+   React.useEffect(() => {
+     setIsMounted(true);
+   }, []);
 
-  const setCurrency = (newCurrency) => {
-    setCurrencyState(newCurrency);
-     try {
-        localStorage.setItem('app-currency', newCurrency);
-    } catch (error) {
-        console.warn('Could not save currency to localStorage', error);
-    }
-  };
+   React.useEffect(() => {
+     if(!isMounted) return;
 
-  React.useEffect(() => {
-    if (!isMounted) return;
-    const rate = getExchangeRate('USD', currency);
-    setConversionRate(rate);
-  }, [isMounted, currency]);
-
-  React.useEffect(() => {
-    if(!isMounted || conversionRate === 1 && currency === 'USD') return;
-
-    const rate = conversionRate;
-    const newConvertedValues = {};
-    const baseCurrency = 'USD';
-
-    for (const key in originalValues) {
-        newConvertedValues[key] = originalValues[key] * rate;
-    }
-     for (const key in dynamicValues) {
-        // Dynamic values are assumed to be entered in the current currency
-        // We need to convert them to the base currency (USD) first for consistent storage,
-        // then convert to the new target currency.
-        const valueInBase = dynamicValues[key] / getExchangeRate(baseCurrency, currency); // This might need adjustment based on how dynamic values are handled
-        newConvertedValues[key] = valueInBase * rate;
-    }
-    
-    setConvertedValues(newConvertedValues);
-  }, [currency, conversionRate, originalValues, isMounted, dynamicValues]);
+     // Since no conversion, convertedValues = originalValues
+     const newConvertedValues = { ...originalValues, ...dynamicValues };
+     setConvertedValues(newConvertedValues);
+   }, [originalValues, isMounted, dynamicValues]);
   
   const formatCurrency = (value, showPlus = false) => {
-    if (value === undefined || isNaN(value)) {
-      value = 0;
-    }
+     if (value === undefined || isNaN(value)) {
+       value = 0;
+     }
 
-    const displayCurrency = isMounted ? currency : 'INR';
-    
-    const locale = currencies.find(c => c.code === displayCurrency)?.locale || 'en-US';
+     const locale = 'en-IN'; // Always INR
 
-    const options = {
-      style: 'currency',
-      currency: displayCurrency,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    };
-    const formattedValue = new Intl.NumberFormat(locale, options).format(value);
-    
-    if (showPlus && value > 0) {
-      return `+${formattedValue}`;
-    }
-    return formattedValue;
-  };
+     const options = {
+       style: 'currency',
+       currency: 'INR',
+       minimumFractionDigits: 2,
+       maximumFractionDigits: 2,
+     };
+     const formattedValue = new Intl.NumberFormat(locale, options).format(value);
+
+     if (showPlus && value > 0) {
+       return `+${formattedValue}`;
+     }
+     return formattedValue;
+   };
 
   const registerValue = React.useCallback((id, value, isDynamic = false) => {
       if(isDynamic) {
@@ -117,13 +79,11 @@ export function CurrencyProvider({ children }) {
   }, []);
   
   const value = {
-    currency,
-    setCurrency,
-    formatCurrency,
-    convertedValues,
-    registerValue,
-    conversionRate,
-  };
+     currency,
+     formatCurrency,
+     convertedValues,
+     registerValue,
+   };
 
   return (
     <CurrencyContext.Provider value={value}>

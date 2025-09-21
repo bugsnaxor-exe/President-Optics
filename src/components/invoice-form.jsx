@@ -276,7 +276,7 @@ export function InvoiceForm({ onCreate }) {
     const renderPrescriptionInputs = (eye, eyeLabel) => (
         <div className="space-y-2">
               <FormLabel className="text-center block text-muted-foreground">{eyeLabel}</FormLabel>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <FormField control={form.control} name={`prescription.sphere.${eye}`} render={({ field }) => (
                       <FormItem><FormControl><Input placeholder="SPH" type="number" step="0.25" {...field} /></FormControl></FormItem>
                   )} />
@@ -446,7 +446,7 @@ export function InvoiceForm({ onCreate }) {
                                 </FormItem>
                             )}
                         />
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <FormField control={form.control} name="email" render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Email</FormLabel>
@@ -463,7 +463,7 @@ export function InvoiceForm({ onCreate }) {
                             )} />
                           </div>
 
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <FormField control={form.control} name="address.city" render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>City</FormLabel>
@@ -478,7 +478,7 @@ export function InvoiceForm({ onCreate }) {
                             )} />
                           </div>
 
-                           <div className="grid grid-cols-2 gap-4">
+                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <FormField control={form.control} name="insuranceProvider" render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Insurance Provider (Optional)</FormLabel>
@@ -574,33 +574,35 @@ export function InvoiceForm({ onCreate }) {
                                     </div>
                                 </div>
     
-                                 <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Product</TableHead>
-                                            <TableHead className="w-[100px]">Quantity</TableHead>
-                                            <TableHead className="w-[150px] text-right">Unit Price</TableHead>
-                                            <TableHead className="w-[150px] text-right">Total</TableHead>
-                                            <TableHead className="w-[50px]"></TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {fields.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">No items added yet.</TableCell></TableRow>}
-                                        {fields.map((field, index) => (
-                                             <InvoiceItemRow
-                                                key={field.id}
-                                                field={field}
-                                                index={index}
-                                                remove={remove}
-                                                control={form.control}
-                                                register={form.register}
-                                                formatCurrency={formatCurrency}
-                                                convertedValues={convertedValues}
-                                                registerValue={registerValue}
-                                             />
-                                        ))}
-                                    </TableBody>
-                                 </Table>
+                                 <div className="overflow-x-auto">
+                                     <Table className="min-w-full">
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead className="min-w-[200px]">Product</TableHead>
+                                                <TableHead className="w-[100px]">Quantity</TableHead>
+                                                <TableHead className="w-[150px] text-right">Unit Price</TableHead>
+                                                <TableHead className="w-[150px] text-right">Total</TableHead>
+                                                <TableHead className="w-[50px]"></TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {fields.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">No items added yet.</TableCell></TableRow>}
+                                            {fields.map((field, index) => (
+                                                 <InvoiceItemRow
+                                                    key={field.id}
+                                                    field={field}
+                                                    index={index}
+                                                    remove={remove}
+                                                    control={form.control}
+                                                    register={form.register}
+                                                    formatCurrency={formatCurrency}
+                                                    convertedValues={convertedValues}
+                                                    registerValue={registerValue}
+                                                 />
+                                            ))}
+                                        </TableBody>
+                                     </Table>
+                                 </div>
                                  {form.formState.errors.items && <p className="text-sm text-destructive mt-2">{form.formState.errors.items.message || form.formState.errors.items?.root?.message}</p>}
                             </div>
     

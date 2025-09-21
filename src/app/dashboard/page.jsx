@@ -57,16 +57,14 @@ import { getCookie } from '@/lib/cookies';
 import { useCurrency } from '@/context/currency-context';
 import { CorrespondenceAssistant } from '@/components/correspondence-assistant';
 import { InvoiceDisplay } from '@/components/invoice-display';
-import { OrderSlipForm } from '@/components/order-slip-form';
 import { LoyaltyManagement } from '@/components/loyalty-management';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { AddProductForm } from '@/components/add-product-form';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { AddCustomerForm } from '@/components/add-patient-form';
+import { AddCustomerForm } from '@/components/add-customer-form';
 import { PatientDetailsDisplay } from '@/components/patient-details-display';
 import { format, differenceInDays, parseISO, addDays } from 'date-fns';
-import { OrderSlipDisplay } from '@/components/order-slip-display';
 import { AppointmentScheduler } from '@/components/appointment-scheduler';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
@@ -74,7 +72,6 @@ import { useToast } from '@/hooks/use-toast';
 import { CSVLink } from 'react-csv';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import LocationReport from '@/components/location-report';
 import { EyewearCatalog } from '@/components/eyewear-catalog';
 import BrandLogos from '@/components/brand-logos';
 import BestSellerCard from '@/components/best-seller-card';
@@ -82,7 +79,6 @@ import { PrescriptionList } from '@/components/prescription-list';
 import { PrescriptionDisplay } from '@/components/prescription-display';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { InvoiceReport } from '@/components/invoice-report';
-import AdminPaymentManager from '@/components/admin-payment-manager';
 import InventoryStatus from '@/components/inventory-status';
 import StockManagement from '@/components/stock-management';
 import { useNavigate } from 'react-router-dom';
@@ -91,7 +87,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useLanguage } from '@/context/language-context';
 import BestSellerByPriceRange from '@/components/best-seller-by-price-range';
 import { InvoiceForm } from '@/components/invoice-form';
-import QuickBill from '@/components/quick-bill';
 
 // Reusable Stat Card Component
 const StatCard = ({ title, icon: Icon, value, description, isLoading }) => {
@@ -134,7 +129,6 @@ function LogoutButton({ fullWidth = false }) {
 
     const handleLogout = () => {
         document.cookie = "currentUser=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-        document.cookie = "userRole=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         document.cookie = "patientId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         navigate('/');
     };
@@ -1052,46 +1046,6 @@ function PatientManagement() {
     );
 }
 
-function OrderSlipManagementSection() {
-     const [orderSlips, setOrderSlips] = React.useState([]);
-     const [selectedOrderSlip, setSelectedOrderSlip] = React.useState(null);
-     const [products, setProducts] = React.useState([]);
-     const [isLoading, setIsLoading] = React.useState(true);
-
-    React.useEffect(() => {
-        async function fetchData() {
-            setIsLoading(true);
-            const prods = await getProducts();
-            setProducts(prods);
-            setIsLoading(false);
-        }
-        fetchData();
-    }, []);
-    
-    const handleCreateOrderSlip = (orderSlipData) => {
-        setOrderSlips(prev => [orderSlipData, ...prev]);
-        setSelectedOrderSlip(orderSlipData);
-    };
-
-     if (selectedOrderSlip) {
-        return (
-            <div>
-                 <Button onClick={() => setSelectedOrderSlip(null)} variant="outline" className="mb-4">
-                    &larr; Back to Order Slip Form
-                 </Button>
-                 <OrderSlipDisplay orderSlip={selectedOrderSlip} />
-            </div>
-        )
-    }
-
-    if (isLoading) {
-        return <Skeleton className="h-96 w-full" />;
-    }
-
-    return (
-        <OrderSlipForm products={products} onCreate={handleCreateOrderSlip} />
-    )
-}
 
 function ReportsSection() {
     const { toast } = useToast();
@@ -1215,21 +1169,6 @@ function ReportsSection() {
                 ...p,
                 stockValue: p.stock * p.price
             }));
-        } else if (reportType === 'locations') {
-             headers = [
-                { label: 'City', key: 'city' },
-                { label: 'Client Count', key: 'clientCount' },
-            ];
-             const counts = initialPatients.reduce((acc, patient) => {
-                const city = patient.address.city;
-                acc[city] = (acc[city] || 0) + 1;
-                return acc;
-            }, {});
-            data = Object.entries(counts).map(([city, count]) => ({
-                city,
-                clientCount: count,
-            }));
-        }
         
         setCsvHeaders(headers);
         setCsvData(data);
@@ -1254,11 +1193,10 @@ function ReportsSection() {
                          In-depth analysis of overall sales, stock, and client data.
                         </CardDescription>
                          <TabsList className="mt-4">
-                            <TabsTrigger value="sales">Products Sold</TabsTrigger>
-                            <TabsTrigger value="purchases">Products Purchased</TabsTrigger>
-                            <TabsTrigger value="stock">Products in Stock</TabsTrigger>
-                            <TabsTrigger value="locations">Locations</TabsTrigger>
-                        </TabsList>
+                             <TabsTrigger value="sales">Products Sold</TabsTrigger>
+                             <TabsTrigger value="purchases">Products Purchased</TabsTrigger>
+                             <TabsTrigger value="stock">Products in Stock</TabsTrigger>
+                         </TabsList>
                     </div>
                      <div className="flex items-center gap-2 print-hidden">
                         <Button variant="outline" size="sm" onClick={handlePrint}>
@@ -1291,64 +1229,35 @@ function ReportsSection() {
                     <TabsContent value="stock">
                        <AuditReport detailed={true} />
                     </TabsContent>
-                    <TabsContent value="locations">
-                        <LocationReport />
-                    </TabsContent>
                 </CardContent>
             </Tabs>
         </Card>
     );
 }
 
-function QuickBillSection() {
-     const [invoice, setInvoice] = React.useState(null);
-    
-    if (invoice) {
-        return (
-             <div>
-                 <Button onClick={() => setInvoice(null)} variant="outline" className="mb-4">
-                    &larr; Back to Quick Bill
-                 </Button>
-                 <InvoiceDisplay invoice={invoice} />
-            </div>
-        )
-    }
-
-    return (
-        <QuickBill onBillGenerated={setInvoice} />
-    )
-}
 
 export default function UnifiedDashboard() {
-   const [userRole, setUserRole] = React.useState(undefined);
-   const [patient, setPatient] = React.useState(null);
-   const [products, setProducts] = React.useState([]);
-   const [isLoading, setIsLoading] = React.useState(true);
-   const { t } = useLanguage();
-   const { toast } = useToast();
+    const [patient, setPatient] = React.useState(null);
+    const [products, setProducts] = React.useState([]);
+    const [isLoading, setIsLoading] = React.useState(true);
+    const { t } = useLanguage();
+    const { toast } = useToast();
 
-   React.useEffect(() => {
-     const role = getCookie('userRole');
-     setUserRole(role);
+    React.useEffect(() => {
+      async function fetchData() {
+          setIsLoading(true);
+          const patientId = getCookie('patientId');
+          if (patientId) {
+              const allPatients = await getPatients();
+              setPatient((allPatients.patients || allPatients).find(p => p.id === patientId) || null);
+          }
+          const prods = await getProducts();
+          setProducts(prods);
+          setIsLoading(false);
+      }
+      fetchData();
 
-     async function fetchData() {
-         setIsLoading(true);
-         if (role === 'patient') {
-             const patientId = getCookie('patientId');
-             if (patientId) {
-                 const allPatients = await getPatients();
-                 setPatient((allPatients.patients || allPatients).find(p => p.id === patientId) || null);
-             }
-         }
-         if (role === 'staff' || role === 'owner') {
-              const prods = await getProducts();
-              setProducts(prods);
-         }
-         setIsLoading(false);
-     }
-     fetchData();
-
-   }, []);
+    }, []);
 
    const handleAddProduct = async (productData) => {
        try {
@@ -1373,86 +1282,142 @@ export default function UnifiedDashboard() {
    };
 
   const renderDashboard = () => {
-    switch (userRole) {
-      case 'admin':
-        return <AdminDashboard />;
-      case 'owner':
-        return <OwnerDashboard />;
-      case 'staff':
-        return <StaffDashboard />;
-      case 'doctor':
-        return <DoctorDashboard />;
-      case 'patient':
-          return <PatientDashboard />
-      default:
-        return <div className="text-center p-8">{t('loadingDashboard')}</div>;
-    }
+    const { formatCurrency, registerValue, convertedValues } = useCurrency();
+    const [invoices, setInvoices] = React.useState([]);
+    const [patients, setPatients] = React.useState([]);
+    const [appointments, setAppointments] = React.useState([]);
+    const [products, setProducts] = React.useState([]);
+    const [isLoading, setIsLoading] = React.useState(true);
+
+    React.useEffect(() => {
+      async function fetchData() {
+        setIsLoading(true);
+        const [inv, pat, app, prod] = await Promise.all([
+          getInvoices(),
+          getPatients(),
+          getAppointments(),
+          getProducts(),
+        ]);
+        setInvoices(inv);
+        setPatients(pat.patients || pat);
+        setAppointments(app);
+        setProducts(prod);
+        setIsLoading(false);
+      }
+      fetchData();
+    }, []);
+
+    const totalRevenue = invoices.reduce((sum, inv) => inv.status === 'Paid' ? sum + inv.total : sum, 0);
+    const outstandingInvoicesValue = invoices.reduce((sum, inv) => (inv.status === 'Unpaid' || inv.status === 'Overdue') ? sum + inv.total : sum, 0);
+    const totalRevenueId = 'totalRevenue_unified';
+    const outstandingInvoicesId = 'outstandingInvoices_unified';
+
+    React.useEffect(() => {
+      registerValue(totalRevenueId, totalRevenue);
+      registerValue(outstandingInvoicesId, outstandingInvoicesValue);
+    }, [registerValue, totalRevenue, outstandingInvoicesValue, totalRevenueId, outstandingInvoicesId, invoices]);
+
+    const displayTotalRevenue = convertedValues[totalRevenueId] ?? totalRevenue;
+    const displayOutstandingInvoices = convertedValues[outstandingInvoicesId] ?? outstandingInvoicesValue;
+
+    return (
+      <div className="space-y-8">
+        <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
+          <StatCard
+            title="Total Revenue"
+            icon={DollarSign}
+            value={formatCurrency(displayTotalRevenue)}
+            description="+20.1% from last month"
+            isLoading={isLoading}
+          />
+          <StatCard
+            title="Outstanding Invoices"
+            icon={Receipt}
+            value={formatCurrency(displayOutstandingInvoices)}
+            description={`${invoices.filter(inv => inv.status === 'Overdue').length} invoices currently overdue`}
+            isLoading={isLoading}
+          />
+          <StatCard
+            title="Active Customers"
+            icon={Users}
+            value={`${patients.length}`}
+            description="Total customers in system"
+            isLoading={isLoading}
+          />
+          <StatCard
+            title="Upcoming Appointments"
+            icon={Calendar}
+            value={`${appointments.filter(a => new Date(a.date) >= new Date()).length}`}
+            description="Total appointments scheduled"
+            isLoading={isLoading}
+          />
+        </div>
+        <div className="grid gap-8 md:grid-cols-2">
+          <BestSellerCard year={new Date().getFullYear()} />
+          <Card>
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+              <CardDescription>Common tasks and shortcuts</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-4">
+              <Button className="justify-start" variant="outline">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Create New Invoice
+              </Button>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button className="justify-start" variant="outline">
+                    <Users className="mr-2 h-4 w-4" />
+                    Add New Customer
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-3xl max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Add New Customer</DialogTitle>
+                    <DialogDescription>
+                      Fill in the details below to add a new customer to the system.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <AddCustomerForm />
+                </DialogContent>
+              </Dialog>
+              <Button className="justify-start" variant="outline">
+                <Calendar className="mr-2 h-4 w-4" />
+                Schedule Appointment
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
   }
   
   const getGreeting = () => {
-      if (!userRole) return "Welcome";
-      return `Welcome, ${userRole.charAt(0).toUpperCase() + userRole.slice(1)}`;
+      return "Welcome to OptaCore";
   }
 
   return (
     <div className="flex w-full flex-col gap-8">
         <div>
              <h1 className="text-5xl font-bold" style={{fontFamily: 'serif'}}>{t('dashboard_title')}</h1>
-            <p className="text-muted-foreground mt-2">{t('dashboard_subtitle')} <span className="font-semibold text-primary">{userRole ? t(`role_${userRole}`) : ''}</span> {t('dashboard_role')}.</p>
+            <p className="text-muted-foreground mt-2">{t('dashboard_subtitle')} <span className="font-semibold text-primary">All Features</span> {t('dashboard_role')}.</p>
         </div>
 
         <Tabs defaultValue="dashboard" className="w-full">
             <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 h-auto">
                 <TabsTrigger value="dashboard"><LayoutDashboard className="w-4 h-4 mr-2" />{t('tab_dashboard')}</TabsTrigger>
-
-                {(userRole === 'admin' || userRole === 'owner' || userRole === 'staff') && (
-                    <TabsTrigger value="invoices"><Receipt className="w-4 h-4 mr-2" />{t('tab_invoices')}</TabsTrigger>
-                )}
-                
-                {userRole === 'admin' && (
-                    <>
-                        <TabsTrigger value="quick-bill"><Zap className="w-4 h-4 mr-2" />{t('tab_quickBill')}</TabsTrigger>
-                        <TabsTrigger value="reports"><LineChart className="w-4 h-4 mr-2" />{t('tab_reports')}</TabsTrigger>
-                        <TabsTrigger value="products"><Package className="w-4 h-4 mr-2" />{t('tab_products')}</TabsTrigger>
-                    </>
-                )}
-
-                 {userRole === 'staff' && (
-                     <>
-                        <TabsTrigger value="appointments"><BookUser className="w-4 h-4 mr-2" />{t('tab_appointments')}</TabsTrigger>
-                        <TabsTrigger value="orders"><ClipboardList className="w-4 h-4 mr-2" />{t('tab_orderSlips')}</TabsTrigger>
-                        <TabsTrigger value="loyalty"><Star className="w-4 h-4 mr-2" />{t('tab_loyalty')}</TabsTrigger>
-                        <TabsTrigger value="inventoryStatus"><PackageSearch className="w-4 h-4 mr-2" />{t('tab_inventoryStatus')}</TabsTrigger>
-                        <TabsTrigger value="stockManagement"><Boxes className="w-4 h-4 mr-2" />{t('tab_stockManagement')}</TabsTrigger>
-                        <TabsTrigger value="support"><LifeBuoy className="w-4 h-4 mr-2" />{t('tab_support')}</TabsTrigger>
-                     </>
-                 )}
-
-                 {userRole === 'owner' && (
-                    <>
-                        <TabsTrigger value="patients"><Users className="w-4 h-4 mr-2" />{t('tab_patients')}</TabsTrigger>
-                        <TabsTrigger value="appointments"><BookUser className="w-4 h-4 mr-2" />{t('tab_appointments')}</TabsTrigger>
-                        <TabsTrigger value="orders"><ClipboardList className="w-4 h-4 mr-2" />{t('tab_orderSlips')}</TabsTrigger>
-                        <TabsTrigger value="loyalty"><Star className="w-4 h-4 mr-2" />{t('tab_loyalty')}</TabsTrigger>
-                        <TabsTrigger value="products"><Package className="w-4 h-4 mr-2" />{t('tab_products')}</TabsTrigger>
-                        <TabsTrigger value="reports"><LineChart className="w-4 h-4 mr-2" />{t('tab_reports')}</TabsTrigger>
-                        <TabsTrigger value="inventory"><Boxes className="w-4 h-4 mr-2" />{t('tab_inventory')}</TabsTrigger>
-                        <TabsTrigger value="correspondence"><Zap className="w-4 h-4 mr-2" />{t('tab_aiAssistant')}</TabsTrigger>
-                        <TabsTrigger value="payments"><Wallet className="w-4 h-4 mr-2" />{t('tab_payments')}</TabsTrigger>
-                    </>
-                )}
-
-                {userRole === 'doctor' && (
-                    <>
-                        <TabsTrigger value="prescriptions"><FileText className="w-4 h-4 mr-2" />{t('tab_prescriptions')}</TabsTrigger>
-                    </>
-                 )}
-
-                 {userRole === 'patient' && (
-                     <TabsTrigger value="prescriptions"><FileText className="w-4 h-4 mr-2" />{t('tab_prescriptions')}</TabsTrigger>
-                 )}
-
-
+                <TabsTrigger value="invoices"><Receipt className="w-4 h-4 mr-2" />{t('tab_invoices')}</TabsTrigger>
+                <TabsTrigger value="reports"><LineChart className="w-4 h-4 mr-2" />{t('tab_reports')}</TabsTrigger>
+                <TabsTrigger value="products"><Package className="w-4 h-4 mr-2" />{t('tab_products')}</TabsTrigger>
+                <TabsTrigger value="appointments"><BookUser className="w-4 h-4 mr-2" />{t('tab_appointments')}</TabsTrigger>
+                <TabsTrigger value="loyalty"><Star className="w-4 h-4 mr-2" />{t('tab_loyalty')}</TabsTrigger>
+                <TabsTrigger value="inventoryStatus"><PackageSearch className="w-4 h-4 mr-2" />{t('tab_inventoryStatus')}</TabsTrigger>
+                <TabsTrigger value="stockManagement"><Boxes className="w-4 h-4 mr-2" />{t('tab_stockManagement')}</TabsTrigger>
+                <TabsTrigger value="support"><LifeBuoy className="w-4 h-4 mr-2" />{t('tab_support')}</TabsTrigger>
+                <TabsTrigger value="patients"><Users className="w-4 h-4 mr-2" />{t('tab_patients')}</TabsTrigger>
+                <TabsTrigger value="inventory"><Boxes className="w-4 h-4 mr-2" />{t('tab_inventory')}</TabsTrigger>
+                <TabsTrigger value="correspondence"><Zap className="w-4 h-4 mr-2" />{t('tab_aiAssistant')}</TabsTrigger>
+                <TabsTrigger value="prescriptions"><FileText className="w-4 h-4 mr-2" />{t('tab_prescriptions')}</TabsTrigger>
             </TabsList>
             
             <TabsContent value="dashboard">
@@ -1461,201 +1426,154 @@ export default function UnifiedDashboard() {
                 </FeatureCard>
             </TabsContent>
             
-            {(userRole === 'owner' || userRole === 'staff' || userRole === 'doctor') && (
-                <TabsContent value="patients">
-                    <FeatureCard title="Customer Management" description="Manage customer information and records.">
-                        <PatientManagement />
-                    </FeatureCard>
-                </TabsContent>
-            )}
+            <TabsContent value="patients">
+                <FeatureCard title="Customer Management" description="Manage customer information and records.">
+                    <PatientManagement />
+                </FeatureCard>
+            </TabsContent>
 
-            {(userRole === 'owner' || userRole === 'admin' || userRole === 'staff') && (
-                <TabsContent value="invoices">
-                    <FeatureCard title={t('feature_invoiceManagement_title')} description={t('feature_invoiceManagement_desc')}>
-                        <InvoiceManagementSection />
-                    </FeatureCard>
-                </TabsContent>
-             )}
+            <TabsContent value="invoices">
+                <FeatureCard title={t('feature_invoiceManagement_title')} description={t('feature_invoiceManagement_desc')}>
+                    <InvoiceManagementSection />
+                </FeatureCard>
+            </TabsContent>
 
+            <TabsContent value="appointments">
+                <FeatureCard title={t('feature_appointmentBooking_title')} description={t('feature_appointmentBooking_desc')}>
+                    <AppointmentScheduler />
+                </FeatureCard>
+            </TabsContent>
+            <TabsContent value="loyalty">
+                <FeatureCard title={t('feature_loyaltyProgram_title')} description={t('feature_loyaltyProgram_desc')}>
+                   <LoyaltyManagement />
+                </FeatureCard>
+            </TabsContent>
 
-            {(userRole === 'owner' || userRole === 'staff') && (
-                <>
-                    <TabsContent value="appointments">
-                        <FeatureCard title={t('feature_appointmentBooking_title')} description={t('feature_appointmentBooking_desc')}>
-                            <AppointmentScheduler />
-                        </FeatureCard>
-                    </TabsContent>
-                    <TabsContent value="orders">
-                         <FeatureCard title={t('feature_createOrderSlip_title')} description={t('feature_createOrderSlip_desc')}>
-                            <OrderSlipManagementSection />
-                        </FeatureCard>
-                    </TabsContent>
-                    <TabsContent value="loyalty">
-                        <FeatureCard title={t('feature_loyaltyProgram_title')} description={t('feature_loyaltyProgram_desc')}>
-                           <LoyaltyManagement />
-                        </FeatureCard>
-                    </TabsContent>
-                </>
-            )}
+            <TabsContent value="inventoryStatus">
+                <FeatureCard title="Inventory Status" description="View current stock levels for all products." isLoading={isLoading}>
+                    <InventoryStatus products={products} />
+                </FeatureCard>
+            </TabsContent>
+             <TabsContent value="stockManagement">
+                <FeatureCard title="Stock Management" description="Update stock levels for products." isLoading={isLoading}>
+                    <StockManagement products={products} />
+                </FeatureCard>
+            </TabsContent>
 
-            {userRole === 'staff' && (
-                <>
-                    <TabsContent value="inventoryStatus">
-                        <FeatureCard title="Inventory Status" description="View current stock levels for all products." isLoading={isLoading}>
-                            <InventoryStatus products={products} />
-                        </FeatureCard>
-                    </TabsContent>
-                     <TabsContent value="stockManagement">
-                        <FeatureCard title="Stock Management" description="Update stock levels for products." isLoading={isLoading}>
-                            <StockManagement products={products} />
-                        </FeatureCard>
-                    </TabsContent>
-                </>
-            )}
+            <TabsContent value="products">
+                <FeatureCard title={t('feature_eyewearCatalog_title')} description={t('feature_eyewearCatalog_desc')}>
+                      <EyewearCatalog />
+                 </FeatureCard>
+            </TabsContent>
+            <TabsContent value="reports">
+                <ReportsSection />
+            </TabsContent>
 
-            {userRole === 'admin' && (
-                <>
-                    <TabsContent value="quick-bill">
-                         <FeatureCard title={t('feature_quickBill_title')} description={t('feature_quickBill_desc')}>
-                           <QuickBillSection />
-                        </FeatureCard>
-                    </TabsContent>
-                    <TabsContent value="products">
-                        <FeatureCard title={t('feature_eyewearCatalog_title')} description={t('feature_eyewearCatalog_desc')}>
-                             <EyewearCatalog />
-                        </FeatureCard>
-                    </TabsContent>
-                    <TabsContent value="reports">
-                        <ReportsSection />
-                    </TabsContent>
-                </>
-            )}
-            
-            {(userRole === 'owner') && (
-                 <TabsContent value="inventory">
-                     <FeatureCard title={t('feature_inventoryControl_title')} description={t('feature_inventoryControl_desc')} isLoading={isLoading}>
-                        <div className="grid gap-8 lg:grid-cols-3">
-                           <div className="lg:col-span-2">
-                                <InventoryStatus products={products} />
-                           </div>
-                           <div>
-                                <AddProductForm onAddProduct={handleAddProduct}/>
-                           </div>
+             <TabsContent value="inventory">
+                 <FeatureCard title={t('feature_inventoryControl_title')} description={t('feature_inventoryControl_desc')} isLoading={isLoading}>
+                     <div className="grid gap-8 lg:grid-cols-3">
+                        <div className="lg:col-span-2">
+                             <InventoryStatus products={products} />
                         </div>
-                    </FeatureCard>
-                </TabsContent>
-            )}
-
-
-             {userRole === 'owner' && (
-                 <>
-                    <TabsContent value="correspondence">
-                         <FeatureCard title={t('feature_aiAssistant_title')} description={t('feature_aiAssistant_desc')}>
-                            <CorrespondenceAssistant />
-                        </FeatureCard>
-                    </TabsContent>
-                    <TabsContent value="payments">
-                        <FeatureCard title={t('feature_adminPayments_title')} description={t('feature_adminPayments_desc')}>
-                            <AdminPaymentManager />
-                        </FeatureCard>
-                    </TabsContent>
-                </>
-            )}
-      
-            {userRole === 'staff' && (
-                <TabsContent value="support">
-                    <FeatureCard title="Support Guides" description="Access help guides and documentation.">
-                        <div className="space-y-6">
-                            <Accordion type="single" collapsible className="w-full">
-                                <AccordionItem value="item-1">
-                                    <AccordionTrigger>
-                                        <div className="flex items-center gap-2">
-                                            <HelpCircle className="h-4 w-4" />
-                                            <span>How do I create a new invoice?</span>
-                                        </div>
-                                    </AccordionTrigger>
-                                    <AccordionContent>
-                                        Navigate to the "Invoices" tab, click "Create Invoice," fill in the patient and item details, and then click the "Create Invoice" button at the bottom. The system will calculate totals automatically.
-                                    </AccordionContent>
-                                </AccordionItem>
-                                 <AccordionItem value="item-2">
-                                     <AccordionTrigger>
-                                        <div className="flex items-center gap-2">
-                                            <HelpCircle className="h-4 w-4" />
-                                            <span>How do I schedule an appointment?</span>
-                                        </div>
-                                    </AccordionTrigger>
-                                    <AccordionContent>
-                                        Go to the "Appointments" tab. Use the calendar to select a day, then fill out the "Book Appointment" form with the patient's name, doctor, date, and time. Click "Book Appointment" to confirm.
-                                    </AccordionContent>
-                                </AccordionItem>
-                                <AccordionItem value="item-3">
-                                     <AccordionTrigger>
-                                        <div className="flex items-center gap-2">
-                                            <HelpCircle className="h-4 w-4" />
-                                            <span>How do I add loyalty points to a patient's account?</span>
-                                        </div>
-                                    </AccordionTrigger>
-                                    <AccordionContent>
-                                        Go to the "Loyalty" tab, find the patient's membership card, enter the number of points in the "Add Points" input field, and click the "Add" button. The points will be updated in real-time.
-                                    </AccordionContent>
-                                </AccordionItem>
-                                <AccordionItem value="item-4">
-                                     <AccordionTrigger>
-                                        <div className="flex items-center gap-2">
-                                            <HelpCircle className="h-4 w-4" />
-                                            <span>What if I can't find a product with the barcode scanner?</span>
-                                        </div>
-                                    </AccordionTrigger>
-                                    <AccordionContent>
-                                        If the barcode scanner doesn't find a product, you can manually type the barcode number into the input field when creating an invoice or order slip. Alternatively, you can use the "Available Products" search bar to find and add products by name or brand.
-                                    </AccordionContent>
-                                </AccordionItem>
-                            </Accordion>
-
-                            <div className="grid md:grid-cols-2 gap-4">
-                                <Card>
-                                    <CardHeader className="flex-row gap-4 items-center">
-                                        <Phone className="w-8 h-8 text-primary" />
-                                        <div>
-                                            <CardTitle>Contact Support</CardTitle>
-                                            <CardDescription>Get help with technical or billing issues.</CardDescription>
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent className="text-sm">
-                                        <p><strong>Technical:</strong> 555-0199 (Mon-Fri, 9am-5pm)</p>
-                                        <p><strong>Billing:</strong> 555-0198 (Mon-Fri, 9am-5pm)</p>
-                                    </CardContent>
-                                </Card>
-                                <Card className="flex flex-col justify-between">
-                                     <CardHeader className="flex-row gap-4 items-center">
-                                        <Book className="w-8 h-8 text-primary" />
-                                        <div>
-                                            <CardTitle>Documentation</CardTitle>
-                                            <CardDescription>Read in-depth guides.</CardDescription>
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent>
-                                       <Button className="w-full">Go to Portal</Button>
-                                    </CardContent>
-                                </Card>
-                            </div>
+                        <div>
+                             <AddProductForm onAddProduct={handleAddProduct}/>
                         </div>
-                    </FeatureCard>
-                </TabsContent>
-            )}
+                     </div>
+                 </FeatureCard>
+             </TabsContent>
 
-            {(userRole === 'doctor' || userRole === 'patient') && (
-                <TabsContent value="prescriptions">
-                    <FeatureCard title={t('feature_managePrescriptions_title')} description={t('feature_managePrescriptions_desc')}>
-                        {userRole === 'patient' ? (
-                             patient ? <PatientDetailsDisplay patient={patient} /> : <p>Loading patient data...</p>
-                        ) : (
-                             <PrescriptionList />
-                        )}
-                    </FeatureCard>
-                </TabsContent>
-            )}
+             <TabsContent value="correspondence">
+                  <FeatureCard title={t('feature_aiAssistant_title')} description={t('feature_aiAssistant_desc')}>
+                     <CorrespondenceAssistant />
+                 </FeatureCard>
+             </TabsContent>
+
+            <TabsContent value="support">
+                <FeatureCard title="Support Guides" description="Access help guides and documentation.">
+                    <div className="space-y-6">
+                        <Accordion type="single" collapsible className="w-full">
+                            <AccordionItem value="item-1">
+                                <AccordionTrigger>
+                                    <div className="flex items-center gap-2">
+                                        <HelpCircle className="h-4 w-4" />
+                                        <span>How do I create a new invoice?</span>
+                                    </div>
+                                </AccordionTrigger>
+                                <AccordionContent>
+                                    Navigate to the "Invoices" tab, click "Create Invoice," fill in the patient and item details, and then click the "Create Invoice" button at the bottom. The system will calculate totals automatically.
+                                </AccordionContent>
+                            </AccordionItem>
+                              <AccordionItem value="item-2">
+                                  <AccordionTrigger>
+                                     <div className="flex items-center gap-2">
+                                         <HelpCircle className="h-4 w-4" />
+                                         <span>How do I schedule an appointment?</span>
+                                     </div>
+                                 </AccordionTrigger>
+                                 <AccordionContent>
+                                     Go to the "Appointments" tab. Use the calendar to select a day, then fill out the "Book Appointment" form with the patient's name, doctor, date, and time. Click "Book Appointment" to confirm.
+                                 </AccordionContent>
+                             </AccordionItem>
+                             <AccordionItem value="item-3">
+                                  <AccordionTrigger>
+                                     <div className="flex items-center gap-2">
+                                         <HelpCircle className="h-4 w-4" />
+                                         <span>How do I add loyalty points to a patient's account?</span>
+                                     </div>
+                                 </AccordionTrigger>
+                                 <AccordionContent>
+                                     Go to the "Loyalty" tab, find the patient's membership card, enter the number of points in the "Add Points" input field, and click the "Add" button. The points will be updated in real-time.
+                                 </AccordionContent>
+                             </AccordionItem>
+                             <AccordionItem value="item-4">
+                                  <AccordionTrigger>
+                                     <div className="flex items-center gap-2">
+                                         <HelpCircle className="h-4 w-4" />
+                                         <span>What if I can't find a product with the barcode scanner?</span>
+                                     </div>
+                                 </AccordionTrigger>
+                                 <AccordionContent>
+                                     If the barcode scanner doesn't find a product, you can manually type the barcode number into the input field when creating an invoice or order slip. Alternatively, you can use the "Available Products" search bar to find and add products by name or brand.
+                                 </AccordionContent>
+                             </AccordionItem>
+                         </Accordion>
+
+                         <div className="grid md:grid-cols-2 gap-4">
+                             <Card>
+                                 <CardHeader className="flex-row gap-4 items-center">
+                                     <Phone className="w-8 h-8 text-primary" />
+                                     <div>
+                                         <CardTitle>Contact Support</CardTitle>
+                                         <CardDescription>Get help with technical or billing issues.</CardDescription>
+                                     </div>
+                                 </CardHeader>
+                                 <CardContent className="text-sm">
+                                     <p><strong>Technical:</strong> 555-0199 (Mon-Fri, 9am-5pm)</p>
+                                     <p><strong>Billing:</strong> 555-0198 (Mon-Fri, 9am-5pm)</p>
+                                 </CardContent>
+                             </Card>
+                             <Card className="flex flex-col justify-between">
+                                  <CardHeader className="flex-row gap-4 items-center">
+                                     <Book className="w-8 h-8 text-primary" />
+                                     <div>
+                                         <CardTitle>Documentation</CardTitle>
+                                         <CardDescription>Read in-depth guides.</CardDescription>
+                                     </div>
+                                 </CardHeader>
+                                 <CardContent>
+                                    <Button className="w-full">Go to Portal</Button>
+                                 </CardContent>
+                             </Card>
+                         </div>
+                     </div>
+                 </FeatureCard>
+             </TabsContent>
+
+            <TabsContent value="prescriptions">
+                <FeatureCard title={t('feature_managePrescriptions_title')} description={t('feature_managePrescriptions_desc')}>
+                    {patient ? <PatientDetailsDisplay patient={patient} /> : <PrescriptionList />}
+                </FeatureCard>
+            </TabsContent>
         </Tabs>
     </div>
   );

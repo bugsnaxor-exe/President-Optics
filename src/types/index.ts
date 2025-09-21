@@ -42,8 +42,8 @@ export interface Product {
 
 export interface Invoice {
   id: string;
-  patientId: string;
-  patientName: string;
+  customerId: string;
+  customerName: string;
   issueDate: string;
   dueDate: string;
   total: number;
@@ -61,8 +61,8 @@ export interface InvoiceItem {
 
 export interface Appointment {
   id: string;
-  patientId: string;
-  patientName: string;
+  customerId: string;
+  customerName: string;
   doctorName: string;
   date: string;
   time: string;
@@ -85,7 +85,7 @@ export interface Shop {
 }
 
 // User roles and authentication
-export type UserRole = 'admin' | 'owner' | 'staff' | 'doctor' | 'patient';
+export type UserRole = 'admin' | 'owner' | 'staff' | 'doctor' | 'customer';
 
 export interface User {
   id: string;
@@ -149,11 +149,9 @@ export interface LanguageContextType {
 
 export interface CurrencyContextType {
   currency: string;
-  setCurrency: (currency: string) => void;
   formatCurrency: (value: number, showPlus?: boolean) => string;
   convertedValues: Record<string, number>;
   registerValue: (id: string, value: number, isDynamic?: boolean) => void;
-  conversionRate: number;
 }
 
 export type LanguageCode = 'en' | 'es' | 'hi' | 'bn';

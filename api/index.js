@@ -181,28 +181,6 @@ app.get('/api/admin-payment-notices', (req, res) => res.json(adminPaymentNotices
 
 // New endpoints as requested
 
-// Patient endpoints
-app.post('/api/patient', (req, res) => {
-  const { name, age, gender, phone, address, medicalHistory } = req.body;
-  if (!name || !age || !gender) {
-    return res.status(400).json({ error: 'name, age, gender are required' });
-  }
-  const newId = `PAT${String(nextIds.patient++).padStart(3, '0')}`;
-  const patient = {
-    id: newId,
-    name,
-    email: '',
-    phone: phone || '',
-    address: { city: address || '', state: '' },
-    insuranceProvider: '',
-    insurancePolicyNumber: '',
-    prescription: { sphere: { right: 0, left: 0 }, cylinder: { right: 0, left: 0 }, axis: { right: 0, left: 0 }, add: { right: 0, left: 0 } },
-    lastVisit: new Date().toISOString().split('T')[0],
-    shopId: 'SHOP001'
-  };
-  patients.push(patient);
-  res.status(201).json({ id: patients.length, name, age, gender, phone, address, medicalHistory });
-});
 
 // Prescription endpoints
 app.post('/api/prescription', (req, res) => {
