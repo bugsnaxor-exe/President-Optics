@@ -11,7 +11,7 @@ import { Award, Star, TrendingUp, Gift, Download, Printer, Loader2, Gem, ShieldC
 import { cn } from '@/lib/utils';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { getPatients, updateCustomer } from '../lib/api';
+import { listCustomer as getPatients, editCustomer as updateCustomer } from '../lib/api';
 import { Skeleton } from './ui/skeleton';
 import Logo from './logo';
 
@@ -115,7 +115,7 @@ export function LoyaltyManagement() {
         async function fetchData() {
             setIsLoading(true);
             const data = await getPatients();
-            const patients = (data.patients || data).map(p => ({
+            const patients = (data.customers || data).map(p => ({
                 ...p,
                 loyaltyTier: p.loyaltyTier || getLoyaltyTier(p.loyaltyPoints || 0)
             }));

@@ -28,7 +28,7 @@ let prescriptions = [
   },
 ];
 
-let nextIds = { customer: 2, prescription: 2 };
+let nextIds = { customer: 2, prescription: 2, appointment: 3 };
 
 // -----------------------------
 // Helper Functions
@@ -61,6 +61,113 @@ function authMiddleware(req, res, next) {
 // -----------------------------
 // Customer Endpoints
 // -----------------------------
+// Proxy endpoints to external API with CORS headers
+router.get('/proxy/listCustomers', async function (req, res) {
+  try {
+    const response = await fetch('https://itcropsolutions.com/PresidentOptical/public/api/listCustomers');
+    const data = await response.json();
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post('/proxy/addCustomers', async function (req, res) {
+  try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (req.headers.authorization) {
+      headers['Authorization'] = req.headers.authorization;
+    }
+    // Transform request body to match external API format
+    const externalBody = {
+      customer_name: req.body.name,
+      customer_phone: req.body.phone,
+      customer_city: req.body.address || 'Unknown'
+    };
+    const response = await fetch('https://itcropsolutions.com/PresidentOptical/public/api/addCustomers', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(externalBody),
+      redirect: 'follow'
+    });
+    const data = await response.text();
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.status(response.status).send(data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.put('/proxy/editCustomers/:id', async function (req, res) {
+  try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (req.headers.authorization) {
+      headers['Authorization'] = req.headers.authorization;
+    }
+    const response = await fetch(`https://itcropsolutions.com/PresidentOptical/public/api/editCustomers/${req.params.id}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(req.body),
+      redirect: 'follow'
+    });
+    const data = await response.text();
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.status(response.status).send(data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.delete('/proxy/deleteCustomers/:id', async function (req, res) {
+  try {
+    const headers = {};
+    if (req.headers.authorization) {
+      headers['Authorization'] = req.headers.authorization;
+    }
+    const response = await fetch(`https://itcropsolutions.com/PresidentOptical/public/api/deleteCustomers/${req.params.id}`, {
+      method: 'DELETE',
+      headers,
+      redirect: 'follow'
+    });
+    const data = await response.text();
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.status(response.status).send(data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post('/proxy/addInvoice', async function (req, res) {
+  try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (req.headers.authorization) {
+      headers['Authorization'] = req.headers.authorization;
+    }
+    const response = await fetch('https://itcropsolutions.com/PresidentOptical/public/api/addInvoice', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(req.body),
+      redirect: 'follow'
+    });
+    const data = await response.text();
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.status(response.status).send(data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 router.post('/customer', function (req, res) {
   const { name, phone, address } = req.body || {};
   if (!name) return res.status(400).json({ error: 'name is required' });
@@ -91,6 +198,50 @@ router.put('/customer/:id', function (req, res) {
   if (customerIndex === -1) return res.status(404).json({ error: 'Customer not found' });
   customers[customerIndex] = { ...customers[customerIndex], ...req.body, updatedAt: new Date().toISOString() };
   res.json(customers[customerIndex]);
+});
+
+router.delete('/customer/:id', function (req, res) {
+  const id = req.params.id;
+  const customerIndex = customers.findIndex(c => c.id === parseInt(id));
+  if (customerIndex === -1) return res.status(404).json({ error: 'Customer not found' });
+  const deletedCustomer = customers.splice(customerIndex, 1)[0];
+  res.json(deletedCustomer);
+});
+
+// -----------------------------
+// Aliased Customer Endpoints
+// -----------------------------
+router.get('/listCustomers', function (req, res) {
+  const { page = '1', limit = '10', search = '' } = req.query;
+  const s = String(search).toLowerCase();
+  const filtered = s ? customers.filter(c => c.name.toLowerCase().includes(s)) : customers;
+  const { data, total, totalPages, page: p } = paginate(filtered, page, limit);
+  res.json({ customers: data, total, page: p, totalPages });
+});
+
+router.post('/addCustomers', function (req, res) {
+  const { name, phone, address } = req.body || {};
+  if (!name) return res.status(400).json({ error: 'name is required' });
+  const now = new Date().toISOString();
+  const customer = { id: nextIds.customer++, name, phone, address, createdAt: now, updatedAt: now };
+  customers.push(customer);
+  res.status(201).json(customer);
+});
+
+router.put('/editCustomers/:id', function (req, res) {
+  const id = req.params.id;
+  const customerIndex = customers.findIndex(c => c.id === parseInt(id));
+  if (customerIndex === -1) return res.status(404).json({ error: 'Customer not found' });
+  customers[customerIndex] = { ...customers[customerIndex], ...req.body, updatedAt: new Date().toISOString() };
+  res.json(customers[customerIndex]);
+});
+
+router.delete('/deleteCustomers/:id', function (req, res) {
+  const id = req.params.id;
+  const customerIndex = customers.findIndex(c => c.id === parseInt(id));
+  if (customerIndex === -1) return res.status(404).json({ error: 'Customer not found' });
+  const deletedCustomer = customers.splice(customerIndex, 1)[0];
+  res.json(deletedCustomer);
 });
 
 router.get('/customer/hotspots', function (req, res) {
@@ -136,6 +287,7 @@ router.post('/customer/invoice', function (req, res) {
     customer: createdCustomer,
   };
 
+  invoices.push(invoice);
   res.status(201).json(invoice);
 });
 
@@ -372,6 +524,29 @@ let appointments = [
 
 router.get('/appointments', function (req, res) {
   res.json(appointments);
+});
+
+router.post('/appointment', function (req, res) {
+  const { patientName, date, time, doctorName = 'General Staff', status = 'Scheduled', shopId = 'SHOP001' } = req.body;
+  if (!patientName || !date || !time) {
+    return res.status(400).json({ error: 'patientName, date, time are required' });
+  }
+
+  const appointment = {
+    id: `APP${nextIds.appointment++}`,
+    patientId: `PAT-${Date.now()}`, // temp id
+    patientName,
+    doctorName,
+    date,
+    time,
+    status,
+    shopId,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+
+  appointments.push(appointment);
+  res.status(201).json(appointment);
 });
 
 // GET /api/admins - Mock admins

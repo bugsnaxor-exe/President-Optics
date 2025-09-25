@@ -10,11 +10,27 @@ export const useTheme = () => {
   return context;
 };
 
+const isLocalStorageAvailable = () => {
+  try {
+    const test = '__localStorage_test__';
+    localStorage.setItem(test, test);
+    localStorage.removeItem(test);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 export const ThemeProvider = ({ children, defaultTheme = 'ocean-green', attribute = 'class' }) => {
   const [theme, setTheme] = useState(() => {
     // Get theme from localStorage or use default
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('optacore-theme') || defaultTheme;
+    if (typeof window !== 'undefined' && isLocalStorageAvailable()) {
+      try {
+        return localStorage.getItem('optacore-theme') || defaultTheme;
+      } catch (error) {
+        console.warn('Could not read theme from localStorage', error);
+        return defaultTheme;
+      }
     }
     return defaultTheme;
   });
@@ -25,8 +41,12 @@ export const ThemeProvider = ({ children, defaultTheme = 'ocean-green', attribut
     root.classList.add(theme);
 
     // Save theme to localStorage
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('optacore-theme', theme);
+    if (typeof window !== 'undefined' && isLocalStorageAvailable()) {
+      try {
+        localStorage.setItem('optacore-theme', theme);
+      } catch (error) {
+        console.warn('Could not save theme to localStorage', error);
+      }
     }
   }, [theme]);
 

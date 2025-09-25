@@ -82,7 +82,7 @@ import { InvoiceReport } from '@/components/invoice-report';
 import InventoryStatus from '@/components/inventory-status';
 import StockManagement from '@/components/stock-management';
 import { useNavigate } from 'react-router-dom';
-import { getPatients, getProducts, getInvoices, getAppointments, getPurchaseOrders, getShops, getDoctors, getAdminPaymentNotices, getStaff, getAdmins, createProduct } from '@/lib/api';
+import { getPatients, getProducts, getInvoices, getAppointments, getPurchaseOrders, getShops, getDoctors, getAdminPaymentNotices, getStaff, getAdmins, createProduct, addCustomer } from '@/lib/api';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLanguage } from '@/context/language-context';
 import BestSellerByPriceRange from '@/components/best-seller-by-price-range';
@@ -594,22 +594,31 @@ function DoctorDashboard() {
         async function fetchData() {
             setIsLoading(true);
             const pat = await getPatients();
-            setPatients(pat.patients || pat);
+            setPatients(pat.customers || []);
             setIsLoading(false);
         }
         fetchData();
     }, []);
 
-     const handleAddPatient = (newPatientData) => {
-         const newPatient = {
-             id: `PAT-${Date.now()}`,
-             lastVisit: new Date().toISOString().split('T')[0],
-             address: newPatientData.address || { city: 'Unknown', state: ''},
-             shopId: 'SHOP001', // default for new patients
-             ...newPatientData
+     const handleAddPatient = async (newPatientData) => {
+         try {
+             await addCustomer(newPatientData);
+             // Refresh the patients list
+             const updatedPatients = await getPatients();
+             setPatients(updatedPatients.customers || []);
+             setAddPatientOpen(false);
+             toast({
+                 title: 'Customer Added',
+                 description: `${newPatientData.name} has been added successfully.`
+             });
+         } catch (error) {
+             console.error('Error adding customer:', error);
+             toast({
+                 variant: 'destructive',
+                 title: 'Error',
+                 description: 'Failed to add customer. Please try again.'
+             });
          }
-         setPatients(prev => [newPatient, ...prev]);
-         setAddPatientOpen(false);
      }
 
     return (
@@ -631,7 +640,7 @@ function DoctorDashboard() {
                                       Fill in the details below or scan a prescription to get started.
                                   </DialogDescription>
                               </DialogHeader>
-                              <AddCustomerForm onAddCustomer={handleAddCustomer} />
+                              <AddCustomerForm onAddCustomer={handleAddPatient} />
                           </DialogContent>
                      </Dialog>
                 </CardHeader>
@@ -806,57 +815,57 @@ function PatientDashboard() {
 }
 
 
-function InvoiceManagementSection() {
-     const [view, setView] = React.useState('list');
-     const [selectedInvoice, setSelectedInvoice] = React.useState(null);
+function InvoiceManagementSection({ defaultView = 'list', products }) {
+       const [view, setView] = React.useState(defaultView);
+       const [selectedInvoice, setSelectedInvoice] = React.useState(null);
 
-    const handleCreateInvoice = (newInvoiceData) => {
-        const newInvoice = {
-            id: `INV-${Date.now()}`,
-            patientId: `PAT-XYZ`, // temp
-            status: 'Unpaid',
-            ...newInvoiceData
-        }
-        setSelectedInvoice(newInvoice);
-        setView('list'); // Switch to showing the new invoice
-    }
-    
-    if (selectedInvoice) {
-        return (
-            <div className="mt-16">
-                 <Button onClick={() => setSelectedInvoice(null)} variant="outline" className="mb-4">
-                    &larr; Back to Invoices
+     const handleCreateInvoice = (newInvoiceData) => {
+         const newInvoice = {
+             id: `INV-${Date.now()}`,
+             patientId: `PAT-XYZ`, // temp
+             status: 'Unpaid',
+             ...newInvoiceData
+         }
+         setSelectedInvoice(newInvoice);
+         setView('list'); // Switch to showing the new invoice
+     }
+
+     if (selectedInvoice) {
+         return (
+             <div className="mt-16">
+                  <Button onClick={() => setSelectedInvoice(null)} variant="outline" className="mb-4">
+                     &larr; Back to Invoices
+                  </Button>
+                  <InvoiceDisplay invoice={selectedInvoice} />
+             </div>
+         )
+     }
+
+     return (
+         <Card>
+             <CardHeader className="flex-row items-center justify-between">
+                 <div>
+                     <CardTitle>Invoice Management</CardTitle>
+                     <CardDescription>Review past invoices or create a new one.</CardDescription>
+                 </div>
+                 <Button onClick={() => setView(view === 'list' ? 'create' : 'list')}>
+                     {view === 'list' ? (
+                         <><PlusCircle className="mr-2 h-4 w-4" /> Create Invoice</>
+                     ) : (
+                         <>&larr; Back to List</>
+                     )}
                  </Button>
-                 <InvoiceDisplay invoice={selectedInvoice} />
-            </div>
-        )
-    }
-    
-    return (
-        <Card>
-            <CardHeader className="flex-row items-center justify-between">
-                <div>
-                    <CardTitle>Invoice Management</CardTitle>
-                    <CardDescription>Review past invoices or create a new one.</CardDescription>
-                </div>
-                <Button onClick={() => setView(view === 'list' ? 'create' : 'list')}>
-                    {view === 'list' ? (
-                        <><PlusCircle className="mr-2 h-4 w-4" /> Create Invoice</>
-                    ) : (
-                        <>&larr; Back to List</>
-                    )}
-                </Button>
-            </CardHeader>
-            <CardContent className="overflow-hidden">
-                {view === 'list' ? (
-                    <InvoiceList onSelectInvoice={setSelectedInvoice} />
-                ) : (
-                    <InvoiceForm onCreate={handleCreateInvoice} />
-                )}
-            </CardContent>
-        </Card>
-    );
-}
+             </CardHeader>
+             <CardContent className="overflow-hidden">
+                 {view === 'list' ? (
+                     <InvoiceList onSelectInvoice={setSelectedInvoice} />
+                 ) : (
+                     <InvoiceForm onCreate={handleCreateInvoice} products={products} />
+                 )}
+             </CardContent>
+         </Card>
+     );
+ }
 
 function InvoiceList({ onSelectInvoice }) {
      const [invoices, setInvoices] = React.useState([]);
@@ -938,7 +947,7 @@ function PatientManagement() {
              setIsLoading(true);
              try {
                  const data = await getPatients();
-                 setPatients(data.patients || data);
+                 setPatients(data.customers || []);
              } catch (error) {
                  console.error('Error fetching patients:', error);
              } finally {
@@ -948,16 +957,25 @@ function PatientManagement() {
          fetchData();
      }, []);
 
-    const handleAddPatient = (newPatientData) => {
-        const newPatient = {
-            id: `PAT-${Date.now()}`,
-            lastVisit: new Date().toISOString().split('T')[0],
-            address: newPatientData.address || { city: 'Unknown', state: ''},
-            shopId: 'SHOP001', // default for new patients
-            ...newPatientData
+    const handleAddPatient = async (newPatientData) => {
+        try {
+            await addCustomer(newPatientData);
+            // Refresh the patients list
+            const updatedPatients = await getPatients();
+            setPatients(updatedPatients.customers || []);
+            setAddPatientOpen(false);
+            toast({
+                title: 'Customer Added',
+                description: `${newPatientData.name} has been added successfully.`
+            });
+        } catch (error) {
+            console.error('Error adding customer:', error);
+            toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: 'Failed to add customer. Please try again.'
+            });
         }
-        setPatients(prev => [newPatient, ...prev]);
-        setAddPatientOpen(false);
     }
 
     return (
@@ -978,7 +996,7 @@ function PatientManagement() {
                                  Fill in the details below or scan a prescription to get started.
                              </DialogDescription>
                          </DialogHeader>
-                         <AddCustomerForm onAddCustomer={handleAddCustomer} />
+                         <AddCustomerForm onAddCustomer={handleAddPatient} />
                      </DialogContent>
                 </Dialog>
             </CardHeader>
@@ -1242,22 +1260,42 @@ export default function UnifiedDashboard() {
     const [isLoading, setIsLoading] = React.useState(true);
     const { t } = useLanguage();
     const { toast } = useToast();
+    const { formatCurrency, registerValue, convertedValues } = useCurrency();
+    const [invoices, setInvoices] = React.useState([]);
+    const [patients, setPatients] = React.useState([]);
+    const [appointments, setAppointments] = React.useState([]);
+    const [activeTab, setActiveTab] = React.useState('dashboard');
+    const [invoiceViewMode, setInvoiceViewMode] = React.useState('list');
 
     React.useEffect(() => {
       async function fetchData() {
           setIsLoading(true);
+          const [inv, pat, app, prod] = await Promise.all([
+            getInvoices(),
+            getPatients(),
+            getAppointments(),
+            getProducts(),
+          ]);
+          setInvoices(inv);
+          setPatients(pat.customers || []);
+          setAppointments(app);
+          setProducts(prod);
           const patientId = getCookie('patientId');
           if (patientId) {
-              const allPatients = await getPatients();
-              setPatient((allPatients.patients || allPatients).find(p => p.id === patientId) || null);
+              setPatient(pat.customers.find(p => p.id === patientId) || null);
           }
-          const prods = await getProducts();
-          setProducts(prods);
           setIsLoading(false);
       }
       fetchData();
 
     }, []);
+
+    // Reset invoice view mode when switching tabs
+    React.useEffect(() => {
+      if (activeTab !== 'invoices') {
+        setInvoiceViewMode('list');
+      }
+    }, [activeTab]);
 
    const handleAddProduct = async (productData) => {
        try {
@@ -1281,117 +1319,7 @@ export default function UnifiedDashboard() {
        }
    };
 
-  const renderDashboard = () => {
-    const { formatCurrency, registerValue, convertedValues } = useCurrency();
-    const [invoices, setInvoices] = React.useState([]);
-    const [patients, setPatients] = React.useState([]);
-    const [appointments, setAppointments] = React.useState([]);
-    const [products, setProducts] = React.useState([]);
-    const [isLoading, setIsLoading] = React.useState(true);
 
-    React.useEffect(() => {
-      async function fetchData() {
-        setIsLoading(true);
-        const [inv, pat, app, prod] = await Promise.all([
-          getInvoices(),
-          getPatients(),
-          getAppointments(),
-          getProducts(),
-        ]);
-        setInvoices(inv);
-        setPatients(pat.patients || pat);
-        setAppointments(app);
-        setProducts(prod);
-        setIsLoading(false);
-      }
-      fetchData();
-    }, []);
-
-    const totalRevenue = invoices.reduce((sum, inv) => inv.status === 'Paid' ? sum + inv.total : sum, 0);
-    const outstandingInvoicesValue = invoices.reduce((sum, inv) => (inv.status === 'Unpaid' || inv.status === 'Overdue') ? sum + inv.total : sum, 0);
-    const totalRevenueId = 'totalRevenue_unified';
-    const outstandingInvoicesId = 'outstandingInvoices_unified';
-
-    React.useEffect(() => {
-      registerValue(totalRevenueId, totalRevenue);
-      registerValue(outstandingInvoicesId, outstandingInvoicesValue);
-    }, [registerValue, totalRevenue, outstandingInvoicesValue, totalRevenueId, outstandingInvoicesId, invoices]);
-
-    const displayTotalRevenue = convertedValues[totalRevenueId] ?? totalRevenue;
-    const displayOutstandingInvoices = convertedValues[outstandingInvoicesId] ?? outstandingInvoicesValue;
-
-    return (
-      <div className="space-y-8">
-        <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
-          <StatCard
-            title="Total Revenue"
-            icon={DollarSign}
-            value={formatCurrency(displayTotalRevenue)}
-            description="+20.1% from last month"
-            isLoading={isLoading}
-          />
-          <StatCard
-            title="Outstanding Invoices"
-            icon={Receipt}
-            value={formatCurrency(displayOutstandingInvoices)}
-            description={`${invoices.filter(inv => inv.status === 'Overdue').length} invoices currently overdue`}
-            isLoading={isLoading}
-          />
-          <StatCard
-            title="Active Customers"
-            icon={Users}
-            value={`${patients.length}`}
-            description="Total customers in system"
-            isLoading={isLoading}
-          />
-          <StatCard
-            title="Upcoming Appointments"
-            icon={Calendar}
-            value={`${appointments.filter(a => new Date(a.date) >= new Date()).length}`}
-            description="Total appointments scheduled"
-            isLoading={isLoading}
-          />
-        </div>
-        <div className="grid gap-8 md:grid-cols-2">
-          <BestSellerCard year={new Date().getFullYear()} />
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>Common tasks and shortcuts</CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-4">
-              <Button className="justify-start" variant="outline">
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Create New Invoice
-              </Button>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button className="justify-start" variant="outline">
-                    <Users className="mr-2 h-4 w-4" />
-                    Add New Customer
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-3xl max-h-[80vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>Add New Customer</DialogTitle>
-                    <DialogDescription>
-                      Fill in the details below to add a new customer to the system.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <AddCustomerForm />
-                </DialogContent>
-              </Dialog>
-              <Button className="justify-start" variant="outline">
-                <Calendar className="mr-2 h-4 w-4" />
-                Schedule Appointment
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-  
   const getGreeting = () => {
       return "Welcome to OptaCore";
   }
@@ -1403,7 +1331,7 @@ export default function UnifiedDashboard() {
             <p className="text-muted-foreground mt-2">{t('dashboard_subtitle')} <span className="font-semibold text-primary">All Features</span> {t('dashboard_role')}.</p>
         </div>
 
-        <Tabs defaultValue="dashboard" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 h-auto">
                 <TabsTrigger value="dashboard"><LayoutDashboard className="w-4 h-4 mr-2" />{t('tab_dashboard')}</TabsTrigger>
                 <TabsTrigger value="invoices"><Receipt className="w-4 h-4 mr-2" />{t('tab_invoices')}</TabsTrigger>
@@ -1422,7 +1350,74 @@ export default function UnifiedDashboard() {
             
             <TabsContent value="dashboard">
                 <FeatureCard title={t('feature_dashboard_title')} description={t('feature_dashboard_desc')}>
-                    {renderDashboard()}
+                    <div className="space-y-8">
+                        <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
+                          <StatCard
+                            title="Total Revenue"
+                            icon={DollarSign}
+                            value={formatCurrency(displayTotalRevenue)}
+                            description="+20.1% from last month"
+                            isLoading={isLoading}
+                          />
+                          <StatCard
+                            title="Outstanding Invoices"
+                            icon={Receipt}
+                            value={formatCurrency(displayOutstandingInvoices)}
+                            description={`${invoices.filter(inv => inv.status === 'Overdue').length} invoices currently overdue`}
+                            isLoading={isLoading}
+                          />
+                          <StatCard
+                            title="Active Customers"
+                            icon={Users}
+                            value={`${patients.length}`}
+                            description="Total customers in system"
+                            isLoading={isLoading}
+                          />
+                          <StatCard
+                            title="Upcoming Appointments"
+                            icon={Calendar}
+                            value={`${appointments.filter(a => new Date(a.date) >= new Date()).length}`}
+                            description="Total appointments scheduled"
+                            isLoading={isLoading}
+                          />
+                        </div>
+                        <div className="grid gap-8 md:grid-cols-2">
+                          <BestSellerCard year={new Date().getFullYear()} />
+                          <Card>
+                            <CardHeader>
+                              <CardTitle>Quick Actions</CardTitle>
+                              <CardDescription>Common tasks and shortcuts</CardDescription>
+                            </CardHeader>
+                            <CardContent className="grid gap-4">
+                              <Button className="justify-start" variant="outline" onClick={() => { setActiveTab('invoices'); setInvoiceViewMode('create'); }}>
+                                <PlusCircle className="mr-2 h-4 w-4" />
+                                Create New Invoice
+                              </Button>
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button className="justify-start" variant="outline">
+                                    <Users className="mr-2 h-4 w-4" />
+                                    Add New Customer
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-3xl max-h-[80vh] overflow-y-auto">
+                                  <DialogHeader>
+                                    <DialogTitle>Add New Customer</DialogTitle>
+                                    <DialogDescription>
+                                      Fill in the details below to add a new customer to the system.
+                                    </DialogDescription>
+                                  </DialogHeader>
+                                  <AddCustomerForm onAddCustomer={handleAddPatient} />
+                                </DialogContent>
+                              </Dialog>
+                              <Button className="justify-start" variant="outline" onClick={() => setActiveTab('appointments')}>
+                                <Calendar className="mr-2 h-4 w-4" />
+                                Schedule Appointment
+                              </Button>
+                            </CardContent>
+                          </Card>
+                        </div>
+                      </div>
                 </FeatureCard>
             </TabsContent>
             
@@ -1434,7 +1429,7 @@ export default function UnifiedDashboard() {
 
             <TabsContent value="invoices">
                 <FeatureCard title={t('feature_invoiceManagement_title')} description={t('feature_invoiceManagement_desc')}>
-                    <InvoiceManagementSection />
+                    <InvoiceManagementSection defaultView={activeTab === 'invoices' && invoiceViewMode === 'create' ? 'create' : 'list'} products={products} />
                 </FeatureCard>
             </TabsContent>
 

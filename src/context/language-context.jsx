@@ -10,22 +10,48 @@ export function LanguageProvider({ children }) {
 
   React.useEffect(() => {
     setIsMounted(true);
-    try {
-      const storedLanguage = localStorage.getItem('app-language');
-      if (storedLanguage && translations[storedLanguage]) {
-        setLanguageState(storedLanguage);
+    const isStorageAvailable = () => {
+      try {
+        const test = '__storage_test__';
+        localStorage.setItem(test, test);
+        localStorage.removeItem(test);
+        return true;
+      } catch {
+        return false;
       }
-    } catch (error) {
-      console.warn('Could not read language from localStorage', error);
+    };
+
+    if (isStorageAvailable()) {
+      try {
+        const storedLanguage = localStorage.getItem('app-language');
+        if (storedLanguage && translations[storedLanguage]) {
+          setLanguageState(storedLanguage);
+        }
+      } catch (error) {
+        console.warn('Could not read language from localStorage', error);
+      }
     }
   }, []);
 
   const setLanguage = (newLanguage) => {
     setLanguageState(newLanguage);
-    try {
-      localStorage.setItem('app-language', newLanguage);
-    } catch (error) {
-      console.warn('Could not save language to localStorage', error);
+    const isStorageAvailable = () => {
+      try {
+        const test = '__storage_test__';
+        localStorage.setItem(test, test);
+        localStorage.removeItem(test);
+        return true;
+      } catch {
+        return false;
+      }
+    };
+
+    if (isStorageAvailable()) {
+      try {
+        localStorage.setItem('app-language', newLanguage);
+      } catch (error) {
+        console.warn('Could not save language to localStorage', error);
+      }
     }
   };
 

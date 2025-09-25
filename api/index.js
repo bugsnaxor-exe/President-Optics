@@ -43,7 +43,7 @@ const patients = [
   }
 ];
 
-const products = [
+let products = [
   {
     id: 'Z5X-C9V-B2N',
     name: 'VisionPro Ultra-Thin Frames',
@@ -52,6 +52,7 @@ const products = [
     stock: 50,
     type: 'Eyewear',
     brand: 'VisionPro',
+    createdAt: '2024-01-01',
   },
   {
     id: 'A1S-D4F-G7H',
@@ -60,6 +61,8 @@ const products = [
     price: 120.0,
     stock: 999,
     type: 'Service',
+    brand: '',
+    createdAt: '2024-01-01',
   }
 ];
 
@@ -94,10 +97,7 @@ const purchaseOrders = [
   }
 ];
 
-const appointments = [
-  { id: 'APP001', patientId: 'PAT001', patientName: 'Priya Sharma', doctorName: 'Dr. Sunita Gupta', date: new Date().toISOString().split('T')[0], time: '10:00 AM', status: 'Scheduled', shopId: 'SHOP001' },
-  { id: 'APP002', patientId: 'PAT002', patientName: 'Rohan Mehta', doctorName: 'Dr. Ramesh Sharma', date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], time: '11:00 AM', status: 'Scheduled', shopId: 'SHOP002' }
-];
+// Appointments moved to let appointments below
 
 const shops = [
   {
@@ -161,7 +161,13 @@ let prescriptions = [
   },
 ];
 
-let nextIds = { customer: 2, prescription: 2, patient: 3 };
+let nextIds = { customer: 2, prescription: 2, patient: 3, appointment: 3 };
+
+// In-memory appointments store
+let appointments = [
+  { id: 'APP001', patientId: 'PAT001', patientName: 'Priya Sharma', doctorName: 'Dr. Sunita Gupta', date: new Date().toISOString().split('T')[0], time: '10:00', status: 'Scheduled', shopId: 'SHOP001' },
+  { id: 'APP002', patientId: 'PAT002', patientName: 'Rohan Mehta', doctorName: 'Dr. Ramesh Sharma', date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], time: '11:00', status: 'Scheduled', shopId: 'SHOP002' }
+];
 
 const app = express();
 app.use(cors());
@@ -170,6 +176,34 @@ app.use(express.json());
 // Original endpoints
 app.get('/api/patients', (req, res) => res.json(patients));
 app.get('/api/products', (req, res) => res.json(products));
+app.post('/api/products', (req, res) => {
+  const { id, name, description, price, stock, type, brand, createdAt } = req.body;
+  if (!id || !name || price === undefined || stock === undefined || !type) {
+    return res.status(400).json({ error: 'id, name, price, stock, type are required' });
+  }
+  const newProduct = {
+    id,
+    name,
+    description: description || '',
+    price: Number(price),
+    stock: Number(stock),
+    type,
+    brand: brand || '',
+    createdAt: createdAt || new Date().toISOString().split('T')[0]
+  };
+  products.push(newProduct);
+  res.status(201).json(newProduct);
+});
+app.put('/api/products/:id', (req, res) => {
+  const { id } = req.params;
+  const productIndex = products.findIndex(p => p.id === id);
+  if (productIndex === -1) {
+    return res.status(404).json({ error: 'Product not found' });
+  }
+  const updatedProduct = { ...products[productIndex], ...req.body };
+  products[productIndex] = updatedProduct;
+  res.json(updatedProduct);
+});
 app.get('/api/invoices', (req, res) => res.json(invoices));
 app.get('/api/purchase-orders', (req, res) => res.json(purchaseOrders));
 app.get('/api/appointments', (req, res) => res.json(appointments));
@@ -293,6 +327,85 @@ app.get('/api/customer/:id', (req, res) => {
   });
 });
 
+app.put('/api/customer/:id', (req, res) => {
+  const id = Number(req.params.id);
+  const customerIndex = customers.findIndex(c => c.id === id);
+  if (customerIndex === -1) {
+    return res.status(404).json({ error: 'Customer not found' });
+  }
+  customers[customerIndex] = { ...customers[customerIndex], ...req.body, updatedAt: new Date().toISOString() };
+  res.json(customers[customerIndex]);
+});
+
+app.delete('/api/customer/:id', (req, res) => {
+  const id = Number(req.params.id);
+  const customerIndex = customers.findIndex(c => c.id === id);
+  if (customerIndex === -1) {
+    return res.status(404).json({ error: 'Customer not found' });
+  }
+  const deletedCustomer = customers.splice(customerIndex, 1)[0];
+  res.json(deletedCustomer);
+});
+
+// Aliased customer endpoints
+app.get('/api/listCustomers', (req, res) => {
+  const { page = 1, limit = 10, search = '' } = req.query;
+  let filtered = customers;
+
+  if (search) {
+    filtered = customers.filter(c => c.name.toLowerCase().includes(search.toLowerCase()));
+  }
+
+  const startIndex = (page - 1) * limit;
+  const endIndex = startIndex + Number(limit);
+  const paginated = filtered.slice(startIndex, endIndex);
+
+  res.json({
+    customers: paginated,
+    total: filtered.length,
+    page: Number(page),
+    totalPages: Math.ceil(filtered.length / Number(limit))
+  });
+});
+
+app.post('/api/addCustomers', (req, res) => {
+  const { name, phone, address } = req.body;
+  if (!name) {
+    return res.status(400).json({ error: 'name is required' });
+  }
+  const now = new Date().toISOString();
+  const customer = {
+    id: nextIds.customer++,
+    name,
+    phone: phone || '',
+    address: address || '',
+    createdAt: now,
+    updatedAt: now
+  };
+  customers.push(customer);
+  res.status(201).json(customer);
+});
+
+app.put('/api/editCustomers/:id', (req, res) => {
+  const id = Number(req.params.id);
+  const customerIndex = customers.findIndex(c => c.id === id);
+  if (customerIndex === -1) {
+    return res.status(404).json({ error: 'Customer not found' });
+  }
+  customers[customerIndex] = { ...customers[customerIndex], ...req.body, updatedAt: new Date().toISOString() };
+  res.json(customers[customerIndex]);
+});
+
+app.delete('/api/deleteCustomers/:id', (req, res) => {
+  const id = Number(req.params.id);
+  const customerIndex = customers.findIndex(c => c.id === id);
+  if (customerIndex === -1) {
+    return res.status(404).json({ error: 'Customer not found' });
+  }
+  const deletedCustomer = customers.splice(customerIndex, 1)[0];
+  res.json(deletedCustomer);
+});
+
 app.get('/api/customer/hotspots', (req, res) => {
   const hotspots = [
     { address: 'Main Street', customerCount: 15 },
@@ -342,4 +455,53 @@ app.post('/api/customer/invoice', (req, res) => {
   res.status(201).json(invoice);
 });
 
+// Appointment endpoints
+app.post('/api/appointment', (req, res) => {
+ const { patientName, date, time, doctorName = 'General Staff', status = 'Scheduled', shopId = 'SHOP001' } = req.body;
+ if (!patientName || !date || !time) {
+   return res.status(400).json({ error: 'patientName, date, time are required' });
+ }
+
+ const appointment = {
+   id: `APP${nextIds.appointment++}`,
+   patientId: `PAT-${Date.now()}`, // temp id
+   patientName,
+   doctorName,
+   date,
+   time,
+   status,
+   shopId,
+   createdAt: new Date().toISOString(),
+   updatedAt: new Date().toISOString()
+ };
+
+ appointments.push(appointment);
+ res.status(201).json(appointment);
+});
+
+app.get('/api/appointment', (req, res) => {
+ const { page = 1, limit = 10, patientId } = req.query;
+ let filtered = appointments;
+
+ if (patientId) {
+   filtered = appointments.filter(a => a.patientId === patientId);
+ }
+
+ const startIndex = (page - 1) * Number(limit);
+ const endIndex = startIndex + Number(limit);
+ const paginated = filtered.slice(startIndex, endIndex);
+
+ res.json({
+   appointments: paginated,
+   total: filtered.length,
+   page: Number(page),
+   totalPages: Math.ceil(filtered.length / Number(limit))
+ });
+});
+
 module.exports = app;
+
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+  console.log(`API server running on port ${port}`);
+});

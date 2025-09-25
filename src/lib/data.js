@@ -30,7 +30,7 @@ export const patients = [
     id: 'PAT001',
     name: 'Priya Sharma',
     email: 'priya.s@example.com',
-    phone: '555-0101',
+    phone: 5550101,
     address: { city: 'Optic City', state: 'CA' },
     insuranceProvider: 'Global Health',
     insurancePolicyNumber: 'GH-12345678',
@@ -49,7 +49,7 @@ export const patients = [
     id: 'PAT002',
     name: 'Rohan Mehta',
     email: 'rohan.m@example.com',
-    phone: '555-0102',
+    phone: 5550102,
     address: { city: 'Visionville', state: 'CA' },
     insuranceProvider: 'United Coverage',
     insurancePolicyNumber: 'UC-87654321',
@@ -68,11 +68,11 @@ export const patients = [
     id: 'PAT003',
     name: 'Anjali Singh',
     email: 'anjali.s@example.com',
-    phone: '555-0103',
+    phone: 5550103,
     address: { city: 'Optic City', state: 'CA' },
     insuranceProvider: 'Nile Assurance',
     insurancePolicyNumber: 'NA-10101010',
-     prescription: {
+      prescription: {
       sphere: { right: -3.50, left: -3.75 },
       cylinder: { right: -1.25, left: -1.0 },
       axis: { right: 90, left: 85 },
@@ -83,15 +83,15 @@ export const patients = [
     loyaltyTier: 'Gold',
     shopId: 'SHOP001',
   },
-   {
+    {
     id: 'PAT004',
     name: 'Vikram Kumar',
     email: 'vikram.k@example.com',
-    phone: '555-0104',
+    phone: 5550104,
     address: { city: 'Lensburg', state: 'CA' },
     insuranceProvider: 'Magic Shield',
     insurancePolicyNumber: 'MS-24681357',
-     prescription: {
+      prescription: {
       sphere: { right: 0.5, left: 0.25 },
       cylinder: { right: 0, left: 0 },
       axis: { right: 0, left: 0 },
@@ -106,7 +106,7 @@ export const patients = [
     id: 'PAT005',
     name: 'Sunita Patil',
     email: 'sunita.p@example.com',
-    phone: '555-0105',
+    phone: 5550105,
     address: { city: 'Optic City', state: 'CA' },
     insuranceProvider: 'Global Health',
     insurancePolicyNumber: 'GH-98765432',
@@ -141,6 +141,7 @@ export const products = [
     price: 120.0,
     stock: 999,
     type: 'Service',
+    brand: 'Generic',
     createdAt: '2023-01-01',
   },
   {
@@ -160,6 +161,7 @@ export const products = [
     price: 50.0,
     stock: 999,
     type: 'Service',
+    brand: 'Generic',
     createdAt: '2023-03-05',
   },
    {
@@ -209,6 +211,7 @@ export const products = [
     price: 79.99,
     stock: 100,
     type: 'Eyewear',
+    brand: 'Generic',
     createdAt: '2023-04-01',
   },
   {
@@ -218,6 +221,7 @@ export const products = [
     price: 89.99,
     stock: 80,
     type: 'Eyewear',
+    brand: 'Generic',
     createdAt: '2023-09-15',
   },
   {
@@ -227,6 +231,7 @@ export const products = [
     price: 75.00,
     stock: 120,
     type: 'Eyewear',
+    brand: 'Generic',
     createdAt: '2024-01-20',
   },
   {

@@ -9,6 +9,7 @@ import LoginPage from './pages/Login';
 import Dashboard from './pages/Dashboard';
 
 function App() {
+  console.log('App component starting');
   return (
     <Router>
       <ThemeProvider defaultTheme="ocean-green">

@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils';
 import { CalendarIcon, PlusCircle } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Input } from './ui/input';
-import { getAppointments } from '@/lib/api';
+import { getAppointments, addAppointment } from '@/lib/api';
 import { Skeleton } from './ui/skeleton';
 
 const appointmentSchema = z.object({
@@ -59,21 +59,34 @@ export function AppointmentScheduler() {
         .sort((a, b) => parseISO(a.date) - parseISO(b.date))
         .slice(0, 10); // Show next 10 appointments
     
-    const onSubmit = (data) => {
-        const newAppointment = {
-            id: `APP-${Date.now()}`,
-            patientId: `PAT-${Date.now()}`, // temp id
+    const onSubmit = async (data) => {
+        const appointmentData = {
             patientName: data.patientName,
-            doctorName: 'General Staff', // default doctor
             date: format(data.date, 'yyyy-MM-dd'),
             time: data.time,
+            doctorName: 'General Staff', // default doctor
             status: 'Scheduled',
             shopId: 'SHOP001' // default shop
-        }
+        };
 
-        setAppointments(prev => [...prev, newAppointment]);
-        toast({ title: "Appointment Scheduled", description: `Booked for ${data.patientName}.`});
-        form.reset();
+        try {
+            const result = await addAppointment(appointmentData);
+            console.log('Appointment created:', result);
+
+            // Refresh appointments list
+            const updatedAppointments = await getAppointments();
+            setAppointments(updatedAppointments);
+
+            toast({ title: "Appointment Scheduled", description: `Booked for ${data.patientName}.`});
+            form.reset();
+        } catch (error) {
+            console.error('Error creating appointment:', error);
+            toast({
+                variant: 'destructive',
+                title: 'Appointment Creation Failed',
+                description: 'An error occurred while scheduling the appointment. Please try again.',
+            });
+        }
     }
 
     if (isLoading) {

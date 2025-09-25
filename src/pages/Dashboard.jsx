@@ -64,7 +64,7 @@ import { AddProductForm } from '@/components/add-product-form';
 import { AddCustomerForm } from '@/components/add-customer-form';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { CustomerInvoiceForm } from '@/components/customer-invoice-form';
-import { CustomerHotspots } from '@/components/customer-hotspots';
+import CustomersList from '@/components/CustomersList';
 import { format, differenceInDays, parseISO, addDays } from 'date-fns';
 import { AppointmentScheduler } from '@/components/appointment-scheduler';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -77,7 +77,6 @@ import { EyewearCatalog } from '@/components/eyewear-catalog';
 import BrandLogos from '@/components/brand-logos';
 import BestSellerCard from '@/components/best-seller-card';
 import { PrescriptionList } from '@/components/prescription-list';
-import { PrescriptionDisplay } from '@/components/prescription-display';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { InvoiceReport } from '@/components/invoice-report';
 import InventoryStatus from '@/components/inventory-status';
@@ -88,6 +87,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useLanguage } from '@/context/language-context';
 import BestSellerByPriceRange from '@/components/best-seller-by-price-range';
 import { InvoiceForm } from '@/components/invoice-form';
+import { PatientDetailsDisplay } from '@/components/patient-details-display';
 
 // Reusable Stat Card Component
 const StatCard = ({ title, icon: Icon, value, description, isLoading }) => {
@@ -420,7 +420,7 @@ function OwnerDashboard() {
         />
       </div>
       <div className="grid gap-8 md:grid-cols-2">
-        <BestSellerCard year={new Date().getFullYear()} />
+        <CustomersList refreshTrigger={customerRefreshTrigger} />
         <Card>
             <CardHeader>
                 <CardTitle>Accounting Integration</CardTitle>
@@ -554,12 +554,13 @@ function DoctorDashboard() {
      const [patients, setPatients] = React.useState([]);
      const [isAddPatientOpen, setAddPatientOpen] = React.useState(false);
      const [isLoading, setIsLoading] = React.useState(true);
+     const { toast } = useToast();
 
     React.useEffect(() => {
         async function fetchData() {
             setIsLoading(true);
             const pat = await getPatients();
-            setPatients(pat.patients || pat);
+            setPatients(pat.customers || []);
             setIsLoading(false);
         }
         fetchData();
@@ -658,7 +659,7 @@ function CustomerDashboard() {
             const patientId = getCookie('patientId');
             if (patientId) {
                 const [allPatients, allInvoices] = await Promise.all([getPatients(), getInvoices()]);
-                const patientsArray = allPatients.patients || allPatients;
+                const patientsArray = allPatients.customers || [];
                 const currentPatient = patientsArray.find(p => p.id === patientId);
 
                 if(currentPatient) {
@@ -1125,6 +1126,7 @@ function ReportsSection() {
                 ...p,
                 stockValue: p.stock * p.price
             }));
+        }
 
         setCsvHeaders(headers);
         setCsvData(data);
@@ -1215,76 +1217,35 @@ function ReportsSection() {
 
 
 export default function UnifiedDashboard() {
-    const [patient, setPatient] = React.useState(null);
+    console.log('UnifiedDashboard component starting');
     const [products, setProducts] = React.useState([]);
     const [isLoading, setIsLoading] = React.useState(true);
     const { t } = useLanguage();
     const { toast } = useToast();
-
-    React.useEffect(() => {
-      async function fetchData() {
-          setIsLoading(true);
-          const patientId = getCookie('patientId');
-          if (patientId) {
-              const allPatients = await getPatients();
-              setPatient(allPatients.patients?.find(p => p.id === patientId) || null);
-          }
-          const prods = await getProducts();
-          setProducts(prods);
-          setIsLoading(false);
-      }
-      fetchData();
-
-    }, []);
-
-   const handleAddProduct = async (productData) => {
-       try {
-           // Price is already in INR (default currency)
-           const newProduct = await createProduct(productData);
-           console.log('Product created:', newProduct);
-
-           // Add the created product to the local state
-           setProducts(prev => [newProduct, ...prev]);
-
-           toast({
-               title: 'Product Added',
-               description: `${productData.name} has been added to the inventory.`
-           });
-       } catch (error) {
-           console.error('Error creating product:', error);
-           toast({
-               variant: 'destructive',
-               title: 'Error',
-               description: 'Failed to add product. Please try again.'
-           });
-       }
-   };
-
-  const renderDashboard = () => {
-    // Unified dashboard showing all key metrics
     const { formatCurrency, registerValue, convertedValues } = useCurrency();
     const [invoices, setInvoices] = React.useState([]);
     const [patients, setPatients] = React.useState([]);
     const [appointments, setAppointments] = React.useState([]);
-    const [products, setProducts] = React.useState([]);
-    const [isLoading, setIsLoading] = React.useState(true);
+    const [isAddCustomerOpen, setAddCustomerOpen] = React.useState(false);
+    const [customerRefreshTrigger, setCustomerRefreshTrigger] = React.useState(0);
 
     React.useEffect(() => {
       async function fetchData() {
-        setIsLoading(true);
-        const [inv, pat, app, prod] = await Promise.all([
-          getInvoices(),
-          getPatients(),
-          getAppointments(),
-          getProducts(),
-        ]);
-        setInvoices(inv);
-        setPatients(pat.patients || pat);
-        setAppointments(app);
-        setProducts(prod);
-        setIsLoading(false);
+          setIsLoading(true);
+          const [inv, pat, app, prod] = await Promise.all([
+            getInvoices(),
+            getPatients(),
+            getAppointments(),
+            getProducts(),
+          ]);
+          setInvoices(inv);
+          setPatients(pat.customers || []);
+          setAppointments(app);
+          setProducts(prod);
+          setIsLoading(false);
       }
       fetchData();
+
     }, []);
 
     const totalRevenue = invoices.reduce((sum, inv) => inv.status === 'Paid' ? sum + inv.total : sum, 0);
@@ -1300,13 +1261,34 @@ export default function UnifiedDashboard() {
     const displayTotalRevenue = convertedValues[totalRevenueId] ?? totalRevenue;
     const displayOutstandingInvoices = convertedValues[outstandingInvoicesId] ?? outstandingInvoicesValue;
 
-    const [isAddCustomerOpen, setAddCustomerOpen] = React.useState(false);
+    const handleAddProduct = async (productData) => {
+        try {
+            // Price is already in INR (default currency)
+            const newProduct = await createProduct(productData);
+            console.log('Product created:', newProduct);
+
+            // Add the created product to the local state
+            setProducts(prev => [newProduct, ...prev]);
+
+            toast({
+                title: 'Product Added',
+                description: `${productData.name} has been added to the inventory.`
+            });
+        } catch (error) {
+            console.error('Error creating product:', error);
+            toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: 'Failed to add product. Please try again.'
+            });
+        }
+    };
 
     const handleAddCustomer = async (newCustomerData) => {
       try {
         const createdCustomer = await createPatient(newCustomerData);
-        console.log('Customer created:', createdCustomer);
         setPatients(prev => [createdCustomer, ...prev]);
+        setCustomerRefreshTrigger(prev => prev + 1); // Trigger refresh of CustomersList
         setAddCustomerOpen(false);
         toast({
           title: 'Customer Added',
@@ -1321,89 +1303,19 @@ export default function UnifiedDashboard() {
         });
       }
     };
-
-    return (
-      <div className="space-y-8">
-        <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
-          <StatCard
-            title="Total Revenue"
-            icon={DollarSign}
-            value={formatCurrency(displayTotalRevenue)}
-            description="+20.1% from last month"
-            isLoading={isLoading}
-          />
-          <StatCard
-            title="Outstanding Invoices"
-            icon={Receipt}
-            value={formatCurrency(displayOutstandingInvoices)}
-            description={`${invoices.filter(inv => inv.status === 'Overdue').length} invoices currently overdue`}
-            isLoading={isLoading}
-          />
-          <StatCard
-            title="Active Customers"
-            icon={Users}
-            value={`${patients.length}`}
-            description="Total customers in system"
-            isLoading={isLoading}
-          />
-          <StatCard
-            title="Upcoming Appointments"
-            icon={Calendar}
-            value={`${appointments.filter(a => new Date(a.date) >= new Date()).length}`}
-            description="Total appointments scheduled"
-            isLoading={isLoading}
-          />
-        </div>
-        <div className="grid gap-8 md:grid-cols-2">
-          <BestSellerCard year={new Date().getFullYear()} />
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>Common tasks and shortcuts</CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-4">
-              <Button className="justify-start" variant="outline">
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Create New Invoice
-              </Button>
-              <Dialog open={isAddCustomerOpen} onOpenChange={setAddCustomerOpen}>
-                <DialogTrigger asChild>
-                  <Button className="justify-start" variant="outline">
-                    <Users className="mr-2 h-4 w-4" />
-                    Add New Customer
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-3xl max-h-[80vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>Add New Customer</DialogTitle>
-                    <DialogDescription>
-                      Fill in the details below to add a new customer to the system.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <AddCustomerForm onAddCustomer={handleAddCustomer} />
-                </DialogContent>
-              </Dialog>
-              <Button className="justify-start" variant="outline">
-                <Calendar className="mr-2 h-4 w-4" />
-                Schedule Appointment
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
   
   const getGreeting = () => {
       return "Welcome to OptaCore";
   }
 
-  return (
-    <div className="flex w-full flex-col gap-8">
-        <div className="mt-16">
-              <h1 className="text-5xl font-bold" style={{fontFamily: 'serif'}}>{t('dashboard_title')}</h1>
-            <p className="text-muted-foreground mt-2">{t('dashboard_subtitle')} <span className="font-semibold text-primary">All Features</span> {t('dashboard_role')}.</p>
-        </div>
+  try {
+    console.log('About to render Dashboard JSX');
+    return (
+      <div className="flex w-full flex-col gap-8">
+          <div className="mt-16">
+                <h1 className="text-5xl font-bold" style={{fontFamily: 'serif'}}>{t('dashboard_title')}</h1>
+              <p className="text-muted-foreground mt-2">{t('dashboard_subtitle')} <span className="font-semibold text-primary">All Features</span> {t('dashboard_role')}.</p>
+          </div>
 
         <Tabs defaultValue="dashboard" className="w-full">
             <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 h-auto">
@@ -1423,7 +1335,74 @@ export default function UnifiedDashboard() {
             
             <TabsContent value="dashboard">
                 <FeatureCard title={t('feature_dashboard_title')} description={t('feature_dashboard_desc')}>
-                    {renderDashboard()}
+                    <div className="space-y-8">
+                        <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
+                          <StatCard
+                            title="Total Revenue"
+                            icon={DollarSign}
+                            value={formatCurrency(displayTotalRevenue)}
+                            description="+20.1% from last month"
+                            isLoading={isLoading}
+                          />
+                          <StatCard
+                            title="Outstanding Invoices"
+                            icon={Receipt}
+                            value={formatCurrency(displayOutstandingInvoices)}
+                            description={`${invoices.filter(inv => inv.status === 'Overdue').length} invoices currently overdue`}
+                            isLoading={isLoading}
+                          />
+                          <StatCard
+                            title="Active Customers"
+                            icon={Users}
+                            value={`${patients.length}`}
+                            description="Total customers in system"
+                            isLoading={isLoading}
+                          />
+                          <StatCard
+                            title="Upcoming Appointments"
+                            icon={Calendar}
+                            value={`${appointments.filter(a => new Date(a.date) >= new Date()).length}`}
+                            description="Total appointments scheduled"
+                            isLoading={isLoading}
+                          />
+                        </div>
+                        <div className="grid gap-8 md:grid-cols-2">
+                          <CustomersList refreshTrigger={customerRefreshTrigger} />
+                          <Card>
+                            <CardHeader>
+                              <CardTitle>Quick Actions</CardTitle>
+                              <CardDescription>Common tasks and shortcuts</CardDescription>
+                            </CardHeader>
+                            <CardContent className="grid gap-4">
+                              <Button className="justify-start" variant="outline">
+                                <PlusCircle className="mr-2 h-4 w-4" />
+                                Create New Invoice
+                              </Button>
+                              <Dialog open={isAddCustomerOpen} onOpenChange={setAddCustomerOpen}>
+                                <DialogTrigger asChild>
+                                  <Button className="justify-start" variant="outline">
+                                    <Users className="mr-2 h-4 w-4" />
+                                    Add New Customer
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-3xl max-h-[80vh] overflow-y-auto">
+                                  <DialogHeader>
+                                    <DialogTitle>Add New Customer</DialogTitle>
+                                    <DialogDescription>
+                                      Fill in the details below to add a new customer to the system.
+                                    </DialogDescription>
+                                  </DialogHeader>
+                                  <AddCustomerForm onAddCustomer={handleAddCustomer} />
+                                </DialogContent>
+                              </Dialog>
+                              <Button className="justify-start" variant="outline">
+                                <Calendar className="mr-2 h-4 w-4" />
+                                Schedule Appointment
+                              </Button>
+                            </CardContent>
+                          </Card>
+                        </div>
+                      </div>
                 </FeatureCard>
             </TabsContent>
             
@@ -1453,7 +1432,7 @@ export default function UnifiedDashboard() {
                     </TabsContent>
                      <TabsContent value="stockManagement">
                         <FeatureCard title="Stock Management" description="Update stock levels for products." isLoading={isLoading}>
-                            <StockManagement products={products} />
+                            <StockManagement products={products} onUpdateProducts={setProducts} />
                         </FeatureCard>
                     </TabsContent>
 
@@ -1574,4 +1553,8 @@ export default function UnifiedDashboard() {
         </Tabs>
     </div>
   );
+  } catch (error) {
+    console.error('Error in UnifiedDashboard:', error);
+    return <div>Error: {error.message}</div>;
+  }
 }

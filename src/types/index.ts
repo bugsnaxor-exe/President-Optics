@@ -3,7 +3,7 @@ export interface Patient {
   id: string;
   name: string;
   email: string;
-  phone: string;
+  phone: number;
   address?: {
     city: string;
     state: string;
@@ -35,29 +35,37 @@ export interface Product {
   description?: string;
   price: number;
   stock: number;
-  type: 'Eyewear' | 'Service' | 'Contact Lenses';
-  brand?: string;
+  type: string;
+  brand: string;
   createdAt: string;
 }
 
 export interface Invoice {
   id: string;
-  customerId: string;
-  customerName: string;
+  customerId: number;
+  customerEmail: string;
+  customerPhone: number;
+  customerCity?: string;
+  customerState?: string;
+  insurance?: string;
+  policyNumber?: string;
+  odSphere?: number;
+  odCylinder?: number;
+  odAxis?: number;
+  odAdd?: number;
+  osSphere?: number;
+  osCylinder?: number;
+  osAxis?: number;
+  osAdd?: number;
   issueDate: string;
   dueDate: string;
-  total: number;
-  status: 'Paid' | 'Unpaid' | 'Overdue';
-  items: InvoiceItem[];
-  shopId: string;
-}
-
-export interface InvoiceItem {
   productId: string;
   productName: string;
-  quantity: number;
+  productQty: number;
   unitPrice: number;
+  totalPrice: number;
 }
+
 
 export interface Appointment {
   id: string;

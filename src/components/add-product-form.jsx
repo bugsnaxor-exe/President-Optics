@@ -38,7 +38,7 @@ export function AddProductForm({ onAddProduct }) {
 
     const { data: products, loading: productsLoading, error: productsError } = useApi(getProducts);
 
-    const brands = products ? [...new Set(products.map(p => p.brand))] : [];
+    const brands = products ? [...new Set(products.map(p => p.brand).filter(b => b && b.trim()))] : [];
 
     const form = useForm({
         resolver: zodResolver(productSchema),
@@ -194,7 +194,7 @@ export function AddProductForm({ onAddProduct }) {
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Brand</FormLabel>
-                                    <Select onValueChange={field.onChange} value={field.value}>
+                                    <Select onValueChange={field.onChange} value={field.value || ''}>
                                         <FormControl>
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Select a brand" />

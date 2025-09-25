@@ -351,12 +351,21 @@ aside .border-b {
   color: #ffffff !important;
 }
 
+/* Override for logo in invoice */
+.print-styles #invoice .text-primary {
+  color: #000000 !important;
+}
+
 .print-styles .text-muted-foreground {
   color: hsl(0, 0, 100%);
 }
 
 .print-styles .text-green-400 {
   color: #ffffff !important;
+}
+
+.print-styles .flex.items-center.gap-2 .text-primary {
+  color: #000000 !important;
 }
 
 .print-styles #advance-paid-container>input {
@@ -382,8 +391,8 @@ aside .border-b {
 @media print {
   body {
     background: #fff;
-    font-size: 10px;
-    /* Smaller font for thermal printers */
+    font-size: 12px;
+    /* Professional font size for A4 invoice */
   }
 
   /* Hide elements that shouldn't be printed */
@@ -405,50 +414,141 @@ aside .border-b {
     background: #fff !important;
   }
 
-  /* Style the invoice card for printing */
+  /* Style the invoice card for professional A4 printing */
   #invoice {
-    width: 80mm;
-    /* Standard thermal printer width */
-    max-width: 80mm;
+    width: 210mm;
+    /* A4 width */
+    max-width: 210mm;
+    min-height: 297mm;
+    /* A4 height */
+    height: auto !important;
+    /* Allow content to expand */
     box-shadow: none !important;
     border: none !important;
-    padding: 2mm;
-    font-family: 'Courier New', Courier, monospace;
-    /* Use a monospace font */
+    padding: 25mm;
+    /* Professional margins */
+    font-family: 'Arial', 'Helvetica', sans-serif;
+    /* Professional sans-serif font */
+    margin: 0 auto;
+    background: #fff !important;
+    overflow: visible !important;
+    /* Ensure content is not clipped */
   }
 
-  /* Adjust font sizes and spacing for receipt */
+  /* Professional font sizes for A4 invoice */
+  #invoice .text-4xl {
+    font-size: 24px;
+    font-weight: bold;
+  }
+
   #invoice .text-3xl {
+    font-size: 20px;
+  }
+
+  #invoice .text-xl {
     font-size: 16px;
   }
 
   #invoice .text-lg {
+    font-size: 14px;
+  }
+
+  #invoice .text-base {
     font-size: 12px;
   }
 
   #invoice .text-sm {
-    font-size: 10px;
+    font-size: 11px;
   }
 
   #invoice .text-xs {
-    font-size: 8px;
+    font-size: 10px;
+  }
+
+  /* Professional spacing */
+  #invoice .mb-8 {
+    margin-bottom: 20px !important;
+  }
+
+  #invoice .mb-4 {
+    margin-bottom: 15px !important;
+  }
+
+  #invoice .mt-8 {
+    margin-top: 20px !important;
+  }
+
+  #invoice .mt-16 {
+    margin-top: 30px !important;
+  }
+
+  #invoice .p-4 {
+    padding: 15px !important;
   }
 
   #invoice .p-8 {
-    padding: 5px !important;
+    padding: 25px !important;
   }
 
-  #invoice .my-6 {
-    margin-top: 10px !important;
-    margin-bottom: 10px !important;
+  /* Professional table styling */
+  #invoice table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
   }
 
-  #invoice .grid-cols-3 {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  #invoice th,
+  #invoice td {
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
   }
 
-  #invoice .gap-4 {
-    gap: 8px;
+  #invoice th {
+    background-color: #f9fafb;
+    font-weight: 600;
+    border-bottom: 2px solid #d1d5db;
+  }
+
+  #invoice .text-center {
+    text-align: center;
+  }
+
+  #invoice .text-right {
+    text-align: right;
+  }
+
+  /* Professional header layout */
+  #invoice header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #e5e7eb;
+  }
+
+  /* Professional bill to section */
+  #invoice .grid.grid-cols-1.md\:grid-cols-2.gap-8 {
+    gap: 40px;
+  }
+
+  /* Professional totals section */
+  #invoice .flex.justify-end.mt-8 .w-full.max-w-sm {
+    max-width: 300px;
+  }
+
+  #invoice .flex.justify-end.mt-8 .space-y-2 > div {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+  }
+
+  #invoice .flex.justify-end.mt-8 .space-y-2 .flex.justify-between.text-xl {
+    font-size: 16px;
+    font-weight: bold;
+    padding: 12px 0;
+    border-top: 2px solid #e5e7eb;
   }
 
   /* Hide input borders and buttons */
@@ -475,13 +575,39 @@ aside .border-b {
     text-align: right;
   }
 
-  /* Ensure table fits */
-  table {
-    width: 100%;
+  /* Professional footer */
+  #invoice .mt-16.text-center {
+    margin-top: 40px;
+    text-align: center;
+    font-size: 11px;
+    color: #6b7280;
   }
 
-  th,
-  td {
-    padding: 2px !important;
+  /* Ensure logo displays properly in print */
+  #invoice .flex.items-center.gap-2 {
+    color: #000000 !important;
+  }
+
+  #invoice .flex.items-center.gap-2 svg {
+    color: #000000 !important;
+    fill: #000000 !important;
+    stroke: #000000 !important;
+  }
+
+  #invoice .flex.items-center.gap-2 .text-primary,
+  #invoice .text-primary {
+    color: #000000 !important;
+  }
+
+  /* Adjust logo size for print */
+  #invoice .flex.items-center.gap-2 .h-6.w-6 {
+    height: 24px !important;
+    width: 24px !important;
+  }
+
+  #invoice .flex.items-center.gap-2 span {
+    font-size: 18px !important;
+    font-weight: bold !important;
+    color: #000000 !important;
   }
 }

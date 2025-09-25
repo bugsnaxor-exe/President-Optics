@@ -11,6 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from './ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Search, PlusCircle, MinusCircle, PackageSearch } from 'lucide-react';
+import { updateProduct } from '@/lib/api';
 
 import { ScrollArea } from './ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
@@ -28,7 +29,7 @@ const stockManagementSchema = z.object({
 
 
 
-export default function StockManagement({ products: initialProducts }) {
+export default function StockManagement({ products: initialProducts, onUpdateProducts }) {
     const { toast } = useToast();
     const [products, setProducts] = React.useState(initialProducts);
     const [searchTerm, setSearchTerm] = React.useState('');
@@ -67,7 +68,7 @@ export default function StockManagement({ products: initialProducts }) {
         });
     }
 
-    const onSubmit = (data) => {
+    const onSubmit = async (data) => {
         const updates = data.items.filter(item => item.adjustment !== 0);
 
         if(updates.length === 0) {
@@ -75,25 +76,41 @@ export default function StockManagement({ products: initialProducts }) {
             return;
         }
 
-        const newProductList = products.map(p => {
-            const update = updates.find(u => u.productId === p.id);
-            if (update && update.adjustment) {
-                return { ...p, stock: p.stock + update.adjustment };
+        try {
+            // Update each product via API
+            const updatePromises = updates.map(update =>
+                updateProduct(update.productId, { stock: update.currentStock + update.adjustment })
+            );
+            await Promise.all(updatePromises);
+
+            // Update local state
+            const newProductList = products.map(p => {
+                const update = updates.find(u => u.productId === p.id);
+                if (update && update.adjustment) {
+                    return { ...p, stock: p.stock + update.adjustment };
+                }
+                return p;
+            });
+
+            setProducts(newProductList);
+            if (onUpdateProducts) {
+                onUpdateProducts(newProductList);
             }
-            return p;
-        });
-        
-        setProducts(newProductList);
-        
-        // This would typically be a backend API call.
-        // For now, we just update the local state.
-        
-        toast({
-            title: 'Stock Updated Successfully',
-            description: `Updated stock for ${updates.length} products.`
-        });
-        
-        form.reset({ items: [] });
+
+            toast({
+                title: 'Stock Updated Successfully',
+                description: `Updated stock for ${updates.length} products.`
+            });
+
+            form.reset({ items: [] });
+        } catch (error) {
+            console.error('Error updating stock:', error);
+            toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: 'Failed to update stock. Please try again.'
+            });
+        }
     }
 
     return (
