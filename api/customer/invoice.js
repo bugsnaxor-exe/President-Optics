@@ -1,8 +1,8 @@
-const { customers, nextIds } = require('../data');
+const { customers, invoices, nextIds } = require('../data');
 
 module.exports = function handler(req, res) {
   if (req.method === 'POST') {
-    const { customer, items, paymentMethod = 'cash', staffId = 1, paidAmount = 0, discount = 0 } = req.body;
+    const { customer, items, paymentMethod = 'cash', staffId = 1, paidAmount = 0, discount = 0, issueDate, dueDate, total } = req.body;
     if (!customer || !Array.isArray(items)) {
       return res.status(400).json({ error: 'customer and items are required' });
     }
@@ -19,24 +19,24 @@ module.exports = function handler(req, res) {
     customers.push(createdCustomer);
 
     // Create invoice
-    const totalAmount = items.reduce((sum, it) => sum + (Number(it.unitPrice) * Number(it.quantity || 1)), 0) - Number(discount || 0);
     const invoice = {
       id: 'INV-' + Date.now(),
-      staffId,
-      paymentMethod,
-      paidAmount,
-      totalAmount,
-      status: paidAmount >= totalAmount ? 'PAID' : 'UNPAID',
-      items: items.map((it, idx) => ({
-        id: idx + 1,
+      patientId: `PAT-${createdCustomer.id}`,
+      patientName: createdCustomer.name,
+      issueDate: issueDate || new Date().toISOString().split('T')[0],
+      dueDate: dueDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      total: total || items.reduce((sum, it) => sum + (Number(it.unitPrice) * Number(it.quantity || 1)), 0) - Number(discount || 0),
+      status: paidAmount >= (total || 0) ? 'Paid' : 'Unpaid',
+      items: items.map(it => ({
+        productId: it.productId,
+        productName: it.productName,
         quantity: it.quantity || 1,
-        unitPrice: Number(it.unitPrice) || 0,
-        product: { name: it.product?.name || 'Item' }
+        unitPrice: Number(it.unitPrice) || 0
       })),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      customer: createdCustomer
+      shopId: 'SHOP001'
     };
+
+    invoices.push(invoice);
 
     res.status(201).json(invoice);
   } else {

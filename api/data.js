@@ -63,7 +63,7 @@ let products = [
   }
 ];
 
-const invoices = [
+let invoices = [
   {
     id: 'INV-2024-001',
     patientId: 'PAT001',

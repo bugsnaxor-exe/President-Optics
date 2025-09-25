@@ -367,14 +367,18 @@ export async function addInvoice(invoiceData) {
       address: invoiceData.address?.city || 'Unknown'
     },
     items: invoiceData.items.map(item => ({
-      unitPrice: item.unitPrice,
+      productId: item.productId,
+      productName: item.productName,
       quantity: item.quantity,
-      product: { name: item.productName }
+      unitPrice: item.unitPrice
     })),
     paymentMethod: 'cash',
     staffId: 1,
     paidAmount: 0,
-    discount: 0
+    discount: 0,
+    issueDate: invoiceData.issueDate,
+    dueDate: invoiceData.dueDate,
+    total: invoiceData.total
   };
 
   console.log('Sending request body:', requestBody);
