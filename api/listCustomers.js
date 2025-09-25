@@ -1,4 +1,4 @@
-const { customers, invoices, nextIds } = require('./data');
+const { customers } = require('./data');
 
 module.exports = function handler(req, res) {
   if (req.method === 'GET') {
@@ -19,24 +19,8 @@ module.exports = function handler(req, res) {
       page: Number(page),
       totalPages: Math.ceil(filtered.length / Number(limit))
     });
-  } else if (req.method === 'POST') {
-    const { name, phone, address } = req.body;
-    if (!name) {
-      return res.status(400).json({ error: 'name is required' });
-    }
-    const now = new Date().toISOString();
-    const customer = {
-      id: nextIds.customer++,
-      name,
-      phone: phone || '',
-      address: address || '',
-      createdAt: now,
-      updatedAt: now
-    };
-    customers.push(customer);
-    res.status(201).json(customer);
   } else {
-    res.setHeader('Allow', ['GET', 'POST']);
+    res.setHeader('Allow', ['GET']);
     res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }

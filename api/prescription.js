@@ -1,6 +1,6 @@
 const { prescriptions, nextIds } = require('./data');
 
-export default function handler(req, res) {
+module.exports = function handler(req, res) {
   if (req.method === 'GET') {
     const { page = 1, limit = 10, patientId } = req.query;
     let filtered = prescriptions;

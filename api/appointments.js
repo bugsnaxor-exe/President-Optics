@@ -1,6 +1,6 @@
 const { appointments, nextIds } = require('./data');
 
-export default function handler(req, res) {
+module.exports = function handler(req, res) {
   if (req.method === 'GET') {
     res.status(200).json(appointments);
   } else if (req.method === 'POST') {

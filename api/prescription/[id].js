@@ -1,6 +1,6 @@
 const { prescriptions } = require('../data');
 
-export default function handler(req, res) {
+module.exports = function handler(req, res) {
   const { id } = req.query;
   const prescriptionId = Number(id);
 
